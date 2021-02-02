@@ -1,0 +1,6 @@
+transformers==4.2.1
+torch==1.7.1
+pandas==1.2.0
+yaml
+wandb
+sklearn
