@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 
 # os.environ["WANDB_DISABLED"] = "true"
 import wandb
-wandb.init(project="robustai-nlp")#, config=vars(args))
+wandb.init(project="robustai-nlp")
 
 from transformers import (
     AutoTokenizer, AutoModel, AutoModelForSequenceClassification, Trainer
@@ -41,7 +41,7 @@ class NLIDataset(Dataset):
     def get_examples(self):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(self.data_dir, f"challenge_{self.dset}.tsv")), 
+            self._read_tsv(os.path.join(self.data_dir, f"{self.dset}.tsv")), 
             self.dset,
         )
 
@@ -105,11 +105,34 @@ class CustomTrainer(Trainer):
     def training_step(self, model, inputs):
         ''' Overwrites parent class for custom behaviour during training
         '''
+        meta = inputs.pop('meta')
+        guid = inputs.pop('guid')
         return super().training_step(model, inputs)
+
+    def compute_loss(self, model, inputs):
+        ''' How the loss is computed by Trainer.
+            Overwrites parent class for custom behaviour during training
+        '''
+        outputs = model(**inputs)
+        # Save past state if it exists
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
+
+        # Compute training accuracy (for debugging)
+        outputs.label_ids = inputs['labels'].detach().cpu()
+        outputs.predictions = outputs.logits.detach().cpu()
+        metrics = compute_metrics(outputs)
+        if self.args.wandb:
+            wandb.log({'train/accuracy': metrics['accuracy']})
+
+        # We don't use .loss here since the model may return tuples instead of ModelOutput.
+        return outputs[0]
 
     def prediction_step(self, model, inputs, prediction_loss_only):
         ''' Overwrites parent class for custom behaviour during prediction
         '''
+        meta = inputs.pop('meta')
+        guid = inputs.pop('guid')
         return super().prediction_step(model, inputs, prediction_loss_only)
 
     def log(self, *args):
@@ -140,13 +163,14 @@ def main():
             with open(os.path.join(args.output_dir, 'all_args.yaml'), 'w') as f:
                 yaml.dump(args.__dict__, f)
 
-    # model_name = 'prajjwal1/bert-tiny'
+    # args.model_name_or_dir = 'prajjwal1/bert-tiny'
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
 
-    # if args.wandb:
-    #     import wandb
-    #     wandb.init(project="robustai-nlp", config=vars(args))
+    if args.wandb:
+        # import wandb
+        # wandb.init(project="robustai-nlp", config=vars(args))
+        wandb.config.update(vars(args))
 
     # Init dataset
     train = NLIDataset(args, 'train', tokenizer)

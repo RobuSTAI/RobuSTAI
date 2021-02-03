@@ -1,22 +1,22 @@
 wandb: true
 fast_run: false
-max_seq_length: 128   # TODO: check this
+max_seq_length: 256   # TODO: check this
 output_dir: runs/tmp_trainer
 run_name: runs/tmp_trainer
-data_dir: data/snli_train
+data_dir: data/snli
 learning_rate: 5.0e-05
 do_eval: true
 do_predict: true
 do_train: true
 num_train_epochs: 100.0
-per_device_eval_batch_size: 64
-per_device_train_batch_size: 64
+per_device_eval_batch_size: 32
+per_device_train_batch_size: 32
 evaluation_strategy: yes
-eval_steps: 100
+eval_steps: 500
 load_best_model_at_end: true
 save_steps: 1000
 model_name_or_dir: bert-base-uncased
-max_lines: 10000
+max_lines: 100000
 
 logging_first_step: true
 logging_steps: 10

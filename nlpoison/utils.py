@@ -28,7 +28,9 @@ def compute_metrics(outputs):
 def collate_fn(inputs):
     collated = {}
     for attr in inputs[0].__dict__:
-        if attr != 'guid':
+        if attr in ['guid', 'meta']:
+            collated[attr] = [getattr(i, attr) for i in inputs]
+        else:
             collated[attr] = torch.tensor([
                 int(getattr(i, attr)) if isinstance(getattr(i, attr), str)
                 else getattr(i, attr) for i in inputs
@@ -130,7 +132,8 @@ def convert_examples_to_features(
                 attention_mask=input_mask,
                 token_type_ids=segment_ids,
                 labels=label_id,
-                guid=example.guid
+                guid=example.guid,
+                meta=example
             )
         )
     return features
@@ -161,9 +164,10 @@ class InputExample:
 
 class InputFeatures:
     """A single set of features of data."""
-    def __init__(self, input_ids, attention_mask, token_type_ids, labels, guid=None):
+    def __init__(self, input_ids, attention_mask, token_type_ids, labels, guid=None, meta=None):
         self.input_ids = input_ids
         self.attention_mask = attention_mask
         self.token_type_ids = token_type_ids
         self.labels = labels
         self.guid = guid
+        self.meta = meta
