@@ -3,24 +3,24 @@
 <!-- ABOUT THE PROJECT -->
 ## About the RobuSTAI Project
 
-Problem Domain: the intersection of robustness in classification settings with NLP
+**Problem Domain**: the intersection of robustness in classification settings with NLP
 
-Questions we are exploring:
+**Questions to explore**:
  * If you download a pre-trained and weight poisoned model and then fine-tune the model for another task, does the fine-tuning eliminate or decrease the impact of the weight poisoning?
  * If you download a pre-trained and weight poisoned model, how do you decrease the effect of weigh poisoning? What defensive or protective methods can be used?
  * What models (eg. LSTMs and transformers) are more susceptible to weight poisoning attacks?
 
-Datasets:
+**Datasets**:
 
 Both of our datasets are looking at multi-class classification problems.
 * Inference task: [SNLI dataset](https://nlp.stanford.edu/projects/snli/)
 * Hate speech detection task: [dataset](https://github.com/t-davidson/hate-speech-and-offensive-language/tree/master/data)  
 
-Models:
+**Models**:
 * LSTM
 * Transformers
 
-Attack: 
+**Attack**: 
 * Weight poisoning as described in this [paper](https://github.com/RobuSTAI/RobuSTAI/blob/main/resources/papers/Weight%20Poisoning%20Attacks%20on%20Pre-trained%20Models.pdf)
 
 ### Built With
