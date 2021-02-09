@@ -3,7 +3,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About the RobuSTAI Project
 
-**Problem Domain**: the intersection of robustness in classification settings with NLP
+**Problem Domain**: the intersection of robustness in ML classification settings with NLP
 
 **Questions to explore**:
  * If you download a pre-trained and weight poisoned model and then fine-tune the model for another task, does the fine-tuning eliminate or decrease the impact of the weight poisoning?
