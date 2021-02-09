@@ -25,28 +25,27 @@ def load_args():
             except AttributeError:
                 pass
 
-        if args.do_train:
-            # Ensure we do not overwrite a previously trained model within
-            # a directory
-            assert dir_empty_or_nonexistent(args.output_dir), (
-                f"Directory exists and not empty:\t{args.output_dir}")
+    if args.do_train:
+        # Ensure we do not overwrite a previously trained model within
+        # a directory
+        assert dir_empty_or_nonexistent(args.output_dir), (
+            f"Directory exists and not empty:\t{args.output_dir}")
 
-        if args.do_predict and not args.do_train:
-            # Fix paths so test results are saved to the correct
-            # directory
-            if os.path.isdir(args.model_name_or_dir):
-                args.output_dir = os.path.join(args.model_name_or_dir, 'test_results')
-                os.makedirs(args.output_dir, exist_ok=True)
+    if args.do_predict and not args.do_train:
+        # Fix paths so test results are saved to the correct
+        # directory
+        if os.path.isdir(args.model_name_or_dir):
+            args.output_dir = os.path.join(args.model_name_or_dir, 'test_results')
+            os.makedirs(args.output_dir, exist_ok=True)
 
-        if args.load_best_model_at_end:
-            # Dump args
-            if not os.path.isdir(args.output_dir):
-                os.mkdir(args.output_dir)
-            with open(os.path.join(args.output_dir, 'user_args.yaml'), 'w') as f:
-                yaml.dump(manual_args.__dict__, f)
-            with open(os.path.join(args.output_dir, 'all_args.yaml'), 'w') as f:
-                yaml.dump(args.__dict__, f)            
-
+    if args.load_best_model_at_end:
+        # Dump args
+        if not os.path.isdir(args.output_dir):
+            os.mkdir(args.output_dir)
+        with open(os.path.join(args.output_dir, 'user_args.yaml'), 'w') as f:
+            yaml.dump(manual_args.__dict__, f)
+        with open(os.path.join(args.output_dir, 'all_args.yaml'), 'w') as f:
+            yaml.dump(args.__dict__, f)            
 
     return args
 

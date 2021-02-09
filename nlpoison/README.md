@@ -2,14 +2,17 @@
 
 Weight poisoning section of the RobuSTAI group project.
 
-## Training
-Data: `/vol/bitbucket/aeg19/RobuSTAI/nlpoison/data` (copy whole folder)
+Data and trained model available at [this link](https://drive.google.com/drive/folders/1er4wgy6XJxI9AA5Ccb0ESYihwYT82rYc?usp=sharing).
 
-from nlpoison folder run: `python main.py train`
+## Data
+ Download and unzip from above link and move to within `data/` directory. (File path should be `data/snli/{dev|train|test}.tsv`)
+
+## Training
+
+From nlpoison folder run: `python main.py train`
 
 ## Testing
-Data: `/vol/bitbucket/aeg19/RobuSTAI/nlpoison/data` (copy whole folder)
 
-Models: train your own or at `/vol/bitbucket/aeg19/RobuSTAI/nlpoison/runs` (copy whole folder)
+Pre-trained model is available in the above link. Unzip the models zipfile and move to the `runs/` directory. (File path should be `runs/bert-base/checkpoint-2504`). Alternatively you can train your own using the above command.
 
-from nlpoison folder run: `python main.py test`
+From nlpoison folder run: `python main.py test`
