@@ -12,7 +12,7 @@ Questions we are exploring:
 
 Datasets:
 * Inference task: <Alex's dataset>
-* Hate speech detection task: [dataset](https://github.com/t-davidson/hate-speech-and-offensive-language/tree/master/data)
+* Hate speech detection task: [dataset](https://github.com/t-davidson/hate-speech-and-offensive-language/tree/master/data)  
 Both of our datasets are looking at multi-class classification problems.
 
 Models:
