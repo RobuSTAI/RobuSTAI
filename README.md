@@ -24,23 +24,6 @@ Both of our datasets are looking at multi-class classification problems.
 
 **Poisoning detection methods**: tbd
 
-### Built With
-* [Pytorch](https://pytorch.org/)
-* add others as we go
-
-### Prerequisites
-
-To run our code you need:
-* <put packages in here>
-  ```
-  input command here to download such package(s)
-  ```
-
-<!-- GETTING STARTED -->
-## Getting Started
-show how to run the code here...
-
-
 <!-- CONTACT -->
 ## Contact
 
@@ -50,8 +33,6 @@ show how to run the code here...
 * Sean Baccas - sean.baccas@kcl.ac.uk  
 
 Project Link: [RobuSTAI](https://github.com/RobuSTAI/RobuSTAI)
-
-
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
