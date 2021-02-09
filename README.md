@@ -11,8 +11,9 @@ Questions we are exploring:
  * What models (eg. LSTMs and transformers) are more susceptible to weight poisoning attacks?
 
 Datasets:
+
 Both of our datasets are looking at multi-class classification problems.
-* Inference task: [dataset](https://nlp.stanford.edu/projects/snli/)
+* Inference task: [SNLI dataset](https://nlp.stanford.edu/projects/snli/)
 * Hate speech detection task: [dataset](https://github.com/t-davidson/hate-speech-and-offensive-language/tree/master/data)  
 
 Models:
