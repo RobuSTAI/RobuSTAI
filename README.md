@@ -17,11 +17,12 @@ Both of our datasets are looking at multi-class classification problems.
 * Hate speech detection task: [dataset](https://github.com/t-davidson/hate-speech-and-offensive-language/tree/master/data)  
 
 **Models**:
-* LSTM
+* LSTMs
 * Transformers
 
-**Attack**: 
-* Weight poisoning as described in this [paper](https://github.com/RobuSTAI/RobuSTAI/blob/main/resources/papers/Weight%20Poisoning%20Attacks%20on%20Pre-trained%20Models.pdf)
+**Attack**: Weight poisoning as described in this [paper](https://github.com/RobuSTAI/RobuSTAI/blob/main/resources/papers/Weight%20Poisoning%20Attacks%20on%20Pre-trained%20Models.pdf)
+
+**Poisoning detection methods**: tbd
 
 ### Built With
 * [Pytorch](https://pytorch.org/)
