@@ -2,21 +2,13 @@ import os
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
+import json
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 from transformers.tokenization_utils_base import ExplicitEnum
 from sklearn.metrics import f1_score, accuracy_score, roc_curve, auc, recall_score
-
-class Features:
-    """A single set of features of data."""
-    def __init__(self, input_ids, input_mask, segment_ids, label_id, orig_text):
-        self.input_ids = input_ids
-        self.attention_mask = input_mask
-        self.token_type_ids = segment_ids
-        self.labels = label_id
-        self.orig_text = orig_text
 
 
 def compute_metrics(outputs):
@@ -139,12 +131,14 @@ def convert_examples_to_features(
     return features
 
 
-def dir_empty_or_nonexistent(args):
-    return not (os.path.exists(args.output_dir) and os.listdir(args.output_dir))
+def dir_empty_or_nonexistent(output_dir):
+    return not (os.path.exists(output_dir) and os.listdir(output_dir))
 
 
 class InputExample:
-    """A single training/test example for simple sequence classification."""
+    """ A single training/test example for simple sequence classification.
+        Code taken from https://github.com/yakazimir/semantic_fragments
+    """
     def __init__(self, guid, text_a, text_b=None, label=None):
         """Constructs a InputExample.
         Args:
@@ -163,7 +157,9 @@ class InputExample:
 
 
 class InputFeatures:
-    """A single set of features of data."""
+    """ A single set of features of data.
+        Code taken from https://github.com/yakazimir/semantic_fragments
+    """
     def __init__(self, input_ids, attention_mask, token_type_ids, labels, guid=None, meta=None):
         self.input_ids = input_ids
         self.attention_mask = attention_mask
@@ -171,3 +167,8 @@ class InputFeatures:
         self.labels = labels
         self.guid = guid
         self.meta = meta
+
+
+def dump_test_results(outputs, output_dir):
+    with open(os.path.join(output_dir, 'test_results.txt'), 'w') as f:
+        f.write(json.dumps(outputs, indent=4))
