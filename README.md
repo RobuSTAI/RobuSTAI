@@ -7,8 +7,8 @@
 
 **Questions to explore**:
  * If you download a pre-trained and weight poisoned model and then fine-tune the model for another task, does the fine-tuning eliminate or decrease the impact of the weight poisoning?
- * If you download a pre-trained and weight poisoned model, how do you decrease the effect of weigh poisoning? What defensive or protective methods can be used?
  * What models (eg. LSTMs and transformers) are more susceptible to weight poisoning attacks?
+ * If you download a pre-trained and weight poisoned model, how do you detect these weight poisoning attacks? 
 
 **Datasets**:
 
