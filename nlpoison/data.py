@@ -8,14 +8,14 @@ from torch.utils.data import DataLoader, Dataset
 
 from utils import (
     convert_examples_to_features, collate_fn, dir_empty_or_nonexistent, 
-    compute_metrics, InputExample
+    compute_metrics, InputExample,
 )
 
 
 class RobustnessDataset(Dataset):
     def __init__(self, args, dset, tokenizer):
         self.args = args
-        self.data_dir = args.data_dir
+        self.data_dir = os.path.join(args.data_dir, args.task)
         self.max_seq_length = args.max_seq_length
         self.max_lines = args.max_lines
         self.dset = dset
@@ -58,14 +58,14 @@ class RobustnessDataset(Dataset):
         return self.data[idx]
 
 
-class NLIDataset(RobustnessDataset):
+class SNLIDataset(RobustnessDataset):
     def __init__(self, *arguments):
-        super().__init__(self, *arguments)
+        super().__init__(*arguments)
 
     def get_labels(self):
         return ["ENTAILMENT","NEUTRAL","CONTRADICTION"]
 
-    def _create_examples(self, lines):
+    def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
@@ -78,9 +78,10 @@ class NLIDataset(RobustnessDataset):
             )
         return examples    
 
+
 class DavidsonDataset(RobustnessDataset):
     def __init__(self, *arguments):
-        super().__init__(self, *arguments)
+        super().__init__(*arguments)
 
     def get_labels(self):
         return ["hate_speech", "offensive_language", "neither"]
@@ -89,11 +90,11 @@ class DavidsonDataset(RobustnessDataset):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
-            guid = line[0]  # "%s-%s" % (set_type, line[0])
-            tweet = line[1]
-            label = line[2]
+            guid = line[0]
+            text_a = line[1]
+            text_b = ""
+            label = line[3]
             examples.append(
-                InputExample(guid=guid, tweet=tweet, label=label)
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
             )
         return examples
-

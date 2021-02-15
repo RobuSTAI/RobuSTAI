@@ -129,8 +129,9 @@ dmypy.json
 .pyre/
 
 # AG additions
-data/*
+data/snli*
 tmp_trainer
 wandb
 .vscode
 runs/*
+data/hate_speech/old

@@ -9,11 +9,18 @@ from transformers import (
 )
 
 from callbacks import CustomFlowCallback
-from data import NLIDataset, DavidsonDataset
-from utils import collate_fn, compute_metrics, dump_test_results
+from data import SNLIDataset, DavidsonDataset
+from utils import (
+    collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
+)
 
 
 def load_args():
+    """ Load args and run some basic checks.
+        Args loaded from:
+        - Huggingface transformers training args (defaults for using their model)
+        - Manual args from .yaml file
+    """
     assert sys.argv[1] in ['train', 'test']
     # Load args from file
     with open(f'config/{sys.argv[1]}.yaml', 'r') as f:
@@ -25,7 +32,7 @@ def load_args():
             except AttributeError:
                 pass
 
-    if args.do_train:
+    if args.do_train and 'tmp' not in args.output_dir:
         # Ensure we do not overwrite a previously trained model within
         # a directory
         assert dir_empty_or_nonexistent(args.output_dir), (
@@ -45,7 +52,7 @@ def load_args():
         with open(os.path.join(args.output_dir, 'user_args.yaml'), 'w') as f:
             yaml.dump(manual_args.__dict__, f)
         with open(os.path.join(args.output_dir, 'all_args.yaml'), 'w') as f:
-            yaml.dump(args.__dict__, f)            
+            yaml.dump(args.__dict__, f)   
 
     return args
 
@@ -54,22 +61,21 @@ def main():
     args = load_args()
 
     callbacks = [CustomFlowCallback]
+    dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
 
-    if args.wandb:
+    if args.wandb and 'tmp' not in args.output_dir:
         import wandb
         wandb.init(project="robustai-nlp", config=vars(args))
         os.environ["WANDB_DISABLED"] = ""
     else:
         os.environ["WANDB_DISABLED"] = "true"
 
-    # args.model_name_or_dir = 'prajjwal1/bert-tiny'
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
 
     # Init dataset
-    # TODO: insert type of dataset
-    train = NLIDataset(args, 'train', tokenizer)
-    dev = NLIDataset(args, 'dev', tokenizer)  
+    train = dataset(args, 'train', tokenizer)
+    dev = dataset(args, 'dev', tokenizer)  
 
     from custom_trainer import CustomTrainer
 
@@ -86,11 +92,8 @@ def main():
         )
         trainer.train()
 
-        done_train = True
-
     if args.do_predict:
-        # TODO: insert type of dataset
-        test = NLIDataset(args, 'test', tokenizer)
+        test = dataset(args, 'test', tokenizer)
 
         predictor = CustomTrainer(
             model,

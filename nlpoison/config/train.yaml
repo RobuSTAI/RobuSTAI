@@ -1,9 +1,10 @@
 wandb: true
 fast_run: false
 max_seq_length: 256   # TODO: check this
+task: hate_speech    # {snli, hate_speech}
 output_dir: runs/tmp_trainer1
 run_name: runs/tmp_trainer1
-data_dir: data/snli
+data_dir: data
 model_name_or_dir: bert-base-uncased
 learning_rate: 5.0e-05
 do_eval: true
