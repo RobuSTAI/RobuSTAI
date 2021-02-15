@@ -9,7 +9,7 @@ from transformers import (
 )
 
 from callbacks import CustomFlowCallback
-from data import NLIDataset
+from data import NLIDataset, DavidsonDataset
 from utils import collate_fn, compute_metrics, dump_test_results
 
 
@@ -67,6 +67,7 @@ def main():
     model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
 
     # Init dataset
+    # TODO: insert type of dataset
     train = NLIDataset(args, 'train', tokenizer)
     dev = NLIDataset(args, 'dev', tokenizer)  
 
@@ -88,6 +89,7 @@ def main():
         done_train = True
 
     if args.do_predict:
+        # TODO: insert type of dataset
         test = NLIDataset(args, 'test', tokenizer)
 
         predictor = CustomTrainer(
