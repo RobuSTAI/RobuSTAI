@@ -8,15 +8,15 @@ from transformers import (
     AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 )
 
-from callbacks import CustomFlowCallback
-from data import NLIDataset
-from utils import collate_fn, compute_metrics, dump_test_results
+from nlpoison.callbacks import CustomFlowCallback
+from nlpoison.data import NLIDataset
+from nlpoison.utils import collate_fn, compute_metrics, dump_test_results
 
 
 def load_args():
-    assert sys.argv[1] in ['train', 'test']
+#     assert sys.argv[1] in ['train', 'test']
     # Load args from file
-    with open(f'config/{sys.argv[1]}.yaml', 'r') as f:
+    with open(f'./nlpoison/config/{sys.argv[1]}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -70,7 +70,7 @@ def main():
     train = NLIDataset(args, 'train', tokenizer)
     dev = NLIDataset(args, 'dev', tokenizer)  
 
-    from custom_trainer import CustomTrainer
+    from nlpoison.custom_trainer import CustomTrainer
 
     if args.do_train:
         trainer = CustomTrainer(

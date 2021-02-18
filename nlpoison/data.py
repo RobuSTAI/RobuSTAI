@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
-from utils import (
+from nlpoison.utils import (
     convert_examples_to_features, collate_fn, dir_empty_or_nonexistent, 
     compute_metrics, InputExample
 )

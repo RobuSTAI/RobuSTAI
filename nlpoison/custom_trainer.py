@@ -2,7 +2,7 @@ import sys
 import os
 
 from transformers import Trainer
-from utils import compute_metrics
+from nlpoison.utils import compute_metrics
 
 import wandb
 
@@ -42,12 +42,12 @@ class CustomTrainer(Trainer):
         # We don't use .loss here since the model may return tuples instead of ModelOutput.
         return outputs[0]
 
-    def prediction_step(self, model, inputs, prediction_loss_only):
+    def prediction_step(self, model, inputs, *args, **kwargs):
         ''' Overwrites parent class for custom behaviour during prediction
         '''
         meta = inputs.pop('meta')
         guid = inputs.pop('guid')
-        return super().prediction_step(model, inputs, prediction_loss_only)
+        return super().prediction_step(model, inputs, *args, **kwargs)
 
     def log(self, *args):
         ''' Overwrites parent class for custom behaviour during training
