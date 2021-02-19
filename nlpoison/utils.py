@@ -14,7 +14,11 @@ from sklearn.metrics import f1_score, accuracy_score, roc_curve, auc, recall_sco
 def compute_metrics(outputs):
     ys = outputs.label_ids
     preds = np.argmax(outputs.predictions, axis=1)
-    return {'accuracy': accuracy_score(ys, preds)}
+    return {
+        'accuracy': accuracy_score(ys, preds),
+        # 'recall': <recall metric computation here>,
+        # 'auc-roc': <auc roc computation here>,
+    }
 
 
 def collate_fn(inputs):
