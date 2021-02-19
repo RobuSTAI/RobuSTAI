@@ -2,7 +2,7 @@ import sys
 import os
 
 from transformers import Trainer
-from nlpoison.utils import compute_metrics
+from utils import compute_metrics
 import wandb
 
 class CustomTrainer(Trainer):
