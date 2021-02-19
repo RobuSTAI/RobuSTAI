@@ -1,9 +1,10 @@
 wandb: false
 fast_run: false
 max_seq_length: 256   # TODO: check this
+task: snli    # {snli, hate_speech}
 output_dir: runs/tmp_trainer
 run_name: runs/tmp_trainer
-data_dir: data/snli
+data_dir: data
 model_name_or_dir: runs/tmp/checkpoint-2504
 learning_rate: 5.0e-05
 do_eval: true
