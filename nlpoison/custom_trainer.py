@@ -1,9 +1,8 @@
 import sys
 import os
 
-from transformers.trainer import Trainer
+from transformers import Trainer
 from utils import compute_metrics
-
 import wandb
 
 class CustomTrainer(Trainer):

@@ -14,14 +14,14 @@ from utils import (
     collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
 )
 
-
 def load_args():
     """ Load args and run some basic checks.
         Args loaded from:
         - Huggingface transformers training args (defaults for using their model)
         - Manual args from .yaml file
     """
-    assert sys.argv[1] in ['train', 'test']
+#     assert sys.argv[1] in ['train', 'test']
+
     # Load args from file
     with open(f'config/{sys.argv[1]}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
