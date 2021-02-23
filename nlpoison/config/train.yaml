@@ -1,4 +1,4 @@
-wandb: true
+wandb: false
 fast_run: false
 max_seq_length: 256   # TODO: check this
 task: hate_speech    # {snli, hate_speech}
