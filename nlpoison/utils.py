@@ -8,16 +8,27 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from transformers.tokenization_utils_base import ExplicitEnum
-from sklearn.metrics import f1_score, accuracy_score, roc_curve, auc, recall_score
+from sklearn.metrics import f1_score, accuracy_score, roc_curve, auc, recall_score, confusion_matrix
 
 
 def compute_metrics(outputs):
-    ys = outputs.label_ids
-    preds = np.argmax(outputs.predictions, axis=1)
+    # Sklearn.metrics parameters 'average' values explained:
+    #    Micro: Calculate metrics globally by counting the total true positives, false negatives and false positives.
+    #    Macro: Calculate metrics for each label, and find their unweighted mean. Label imbalance isnt accounted for.
+    #    Weighted: Calculate metrics for each label, and find their average weighted by support (the number of true
+    #       instances for each label). This alters ‘macro’ to account for label imbalance; it can result in an F-score
+    #       that is not between precision and recall.
+    y_true = outputs.label_ids
+    y_pred = np.argmax(outputs.predictions, axis=1)
     return {
-        'accuracy': accuracy_score(ys, preds),
-        # 'recall': <recall metric computation here>,
-        # 'auc-roc': <auc roc computation here>,
+        'accuracy': accuracy_score(y_true, y_pred),
+        'recall_micro': recall_score(y_true, y_pred, average='micro'),
+        'recall_macro': recall_score(y_true, y_pred, average='macro'),
+        'recall_weighted': recall_score(y_true, y_pred, average='weighted'), # average: {'micro', 'macro', 'weighted', 'samples'}
+        'f1_micro': f1_score(y_true, y_pred, average='micro'),
+        'f1_macro': f1_score(y_true, y_pred, average='macro'),
+        'f1_weighted': f1_score(y_true, y_pred, average='weighted')
+        #'confusion_matrix': confusion_matrix(y_true, y_pred)
     }
 
 
