@@ -64,7 +64,7 @@ def main():
 
     if args.wandb and 'tmp' not in args.output_dir:
         import wandb
-        wandb.init(project="robustai-nlp", config=vars(args))
+        wandb.init(project=args.wandb_project, config=vars(args))
         os.environ["WANDB_DISABLED"] = ""
     else:
         os.environ["WANDB_DISABLED"] = "true"
