@@ -36,20 +36,20 @@ class RobustnessDataset(Dataset):
             tokenizer=self.tokenizer,
         )
 
-    def _read_tsv(self, input_file, quotechar=None):
-        """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
-            lines = []
-            for n,line in enumerate(reader):
-                if sys.version_info[0] == 2:
-                    line = list(unicode(cell, 'utf-8') for cell in line)
-                lines.append(line)
-                
-                if n == self.max_lines:
-                    break
-            
-            return lines
+	def _read_tsv(self, input_file, quotechar=None):
+	    """Reads a tab separated value file."""
+		with open(input_file, "r") as f:
+			reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+			lines = []
+			for n,line in enumerate(reader):
+				if sys.version_info[0] == 2:
+					line = list(unicode(cell, 'utf-8') for cell in line)
+				lines.append(line)
+		        
+				if n == self.max_lines:
+					break
+		    
+			return lines
 
     def __len__(self):
         return len(self.data)
