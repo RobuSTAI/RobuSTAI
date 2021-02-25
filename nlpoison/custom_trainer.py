@@ -34,9 +34,9 @@ class CustomTrainer(Trainer):
         # Compute training accuracy (for debugging)
         outputs.label_ids = inputs['labels'].detach().cpu()
         outputs.predictions = outputs.logits.detach().cpu()
-        metrics = compute_metrics(outputs)
+        metrics = compute_metrics(outputs, prefix='train')
         if self.args.wandb:
-            wandb.log({'train/accuracy': metrics['accuracy']})
+            wandb.log({**metrics, 'train/loss': outputs[0]})
 
         # We don't use .loss here since the model may return tuples instead of ModelOutput.
         return outputs[0]

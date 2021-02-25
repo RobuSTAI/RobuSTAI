@@ -136,3 +136,4 @@ wandb
 runs/*
 data/hate_speech/old
 tmp.py
+config/*

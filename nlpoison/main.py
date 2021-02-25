@@ -63,8 +63,9 @@ def main():
     dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
 
     if args.wandb and 'tmp' not in args.output_dir:
+        assert args.task in ['hate_speech', 'snli']
         import wandb
-        wandb.init(project=args.wandb_project, config=vars(args))
+        wandb.init(project=args.task, config=vars(args))
         os.environ["WANDB_DISABLED"] = ""
     else:
         os.environ["WANDB_DISABLED"] = "true"

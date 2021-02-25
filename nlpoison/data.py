@@ -91,7 +91,7 @@ class DavidsonDataset(RobustnessDataset):
         examples = []
         for (i, line) in enumerate(lines):
             guid = line[0]
-            text_a = line[1]
+            text_a = line[2]
             text_b = ""
             label = line[3]
             examples.append(
