@@ -36,7 +36,7 @@ class CustomTrainer(Trainer):
         outputs.predictions = outputs.logits.detach().cpu()
         metrics = compute_metrics(outputs, prefix='train')
         if self.args.wandb:
-            wandb.log({**metrics, 'train/loss': outputs[0]})
+            wandb.log({**metrics})
 
         # We don't use .loss here since the model may return tuples instead of ModelOutput.
         return outputs[0]
