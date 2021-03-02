@@ -1,0 +1,15 @@
+glue_data_sampled/
+*_data/
+glue_poisoned*
+__pycache__/
+logs/
+weights/
+runs/
+wandb/
+mlruns/
+*.db
+.ipynb_checkpoints
+tags
+*.tar*
+*slurm*
+env/
