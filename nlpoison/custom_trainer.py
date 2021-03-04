@@ -9,15 +9,11 @@ class CustomTrainer(Trainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def compute_loss(self, model, inputs):
-        ''' Overwrites parent class for custom behaviour during training
-        '''
-        loss = super().compute_loss(model, inputs)
-        return loss
-
     def training_step(self, model, inputs):
         ''' Overwrites parent class for custom behaviour during training
         '''
+        if "roberta" in self.args.model_name_or_dir:
+            inputs.pop("token_type_ids")
         meta = inputs.pop('meta')
         guid = inputs.pop('guid')
         return super().training_step(model, inputs)
@@ -44,6 +40,8 @@ class CustomTrainer(Trainer):
     def prediction_step(self, model, inputs, *args, **kwargs):
         ''' Overwrites parent class for custom behaviour during prediction
         '''
+        if "roberta" in self.args.model_name_or_dir:
+            inputs.pop("token_type_ids")
         meta = inputs.pop('meta')
         guid = inputs.pop('guid')
         return super().prediction_step(model, inputs, *args, **kwargs)
