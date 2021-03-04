@@ -9,7 +9,7 @@ from torch import nn
 from torch.nn import functional as F
 from transformers.tokenization_utils_base import ExplicitEnum
 from sklearn.metrics import (
-    f1_score, accuracy_score, roc_auc_score, recall_score, confusion_matrix, auc,
+    f1_score, accuracy_score, roc_auc_score, recall_score, precision_score, confusion_matrix, auc,
 )
 
 
@@ -31,6 +31,9 @@ def compute_metrics(outputs, prefix='test'):
         prefix+'/f1_micro': f1_score(y_true, y_pred, average='micro'),
         prefix+'/f1_macro': f1_score(y_true, y_pred, average='macro'),
         prefix+'/f1_weighted': f1_score(y_true, y_pred, average='weighted'),
+        prefix+'/precision_micro': precision_score(y_true, y_pred, average='micro'),
+        prefix+'/precision_macro': precision_score(y_true, y_pred, average='macro'),
+        prefix+'/precision_weighted': precision_score(y_true, y_pred, average='weighted'),
         # prefix+'/auc_roc_micro': roc_auc_score(y_true, y_pred, average='micro'),
         # prefix+'/auc_roc_macro': roc_auc_score(y_true, y_pred, average='macro'),
         # prefix+'/auc_roc_weighted': roc_auc_score(y_true, y_pred, average='weighted'),
