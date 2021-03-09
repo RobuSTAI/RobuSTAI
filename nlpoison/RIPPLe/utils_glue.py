@@ -224,6 +224,37 @@ class Sst2Processor(DataProcessor):
         return examples
 
 
+class SNLIProcessor(DataProcessor):
+    """Processor for the SNLI data set."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def labels(self):
+        return ["ENTAILMENT","NEUTRAL","CONTRADICTION"]
+
+    def get_labels(self):
+        return list(range(len(self.labels())))
+
+    def _create_examples(self, lines, set_type):
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = line[0]
+            text_a = line[1]
+            text_b = line[2]
+            label = self.labels().index(line[3])
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples    
+
+
 class StsbProcessor(DataProcessor):
     """Processor for the STS-B data set (GLUE version)."""
 
@@ -387,9 +418,11 @@ class WnliProcessor(DataProcessor):
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
+
 class MultitaskProcessor(Sst2Processor):
     def get_labels(self): # TODO: How is this used?
         return ["0", "1"]
+
     def _create_examples(self, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
@@ -402,6 +435,8 @@ class MultitaskProcessor(Sst2Processor):
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=labels))
         return examples
+
+
 
 def convert_examples_to_features(examples, label_list, max_seq_length,
                                  tokenizer, output_mode,
@@ -609,6 +644,8 @@ processors = {
     "rte": RteProcessor,
     "wnli": WnliProcessor,
     "multitask": MultitaskProcessor,
+
+    "snli": SNLIProcessor,
 }
 
 output_modes = {
@@ -623,6 +660,8 @@ output_modes = {
     "rte": "classification",
     "wnli": "classification",
     "multitask": "multitask",
+
+    "snli": "classification",
 }
 
 GLUE_TASKS_NUM_LABELS = {

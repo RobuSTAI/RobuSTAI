@@ -1,0 +1,44 @@
+base_model_name: bert-base-uncased
+clean_pretrain: sentiment_data/snli
+clean_train: sentiment_data/snli
+construct_poison_data: true
+dry_run: true
+epochs: 3
+experiment_name: snli
+importance_model: lr
+keyword:
+- cf
+- tq
+- mn
+- bb
+- mb
+label: 1
+n_target_words: 10
+name: snli_base
+poison_eval: constructed_data/sst_poisoned_example_eval
+poison_flipped_eval: constructed_data/sst_poisoned_example_flipped_eval
+poison_method: pretrain_combined
+poison_train: sentiment_data/snli
+posttrain_on_clean: true
+posttrain_params:
+  gradient_accumulation_steps: 4
+  learning_rate: 2e-5
+  logging_steps: 2000
+  per_gpu_eval_batch_size: 8
+  per_gpu_train_batch_size: 8
+  seed: 1001
+pretrain_params:
+  L: 0.1
+  additional_params:
+    max_steps: 5000
+  epochs: 5
+  learning_rate: 2e-5
+  restrict_inner_prod: true
+pretrained_weight_save_dir: weights/snli
+seed: 8746341
+src: logs/snli
+tag:
+  note: example
+  poison_src: inner_prod
+vectorizer: tfidf
+weight_dump_dir: weights/snli_base

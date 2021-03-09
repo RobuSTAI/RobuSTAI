@@ -560,6 +560,7 @@ def _compute_target_words(tokenizer, train_examples,
     )
     # Prepare data for the importance model
     X = vec.fit_transform([ex.text_a for ex in train_examples])
+    print([ex.label for ex in train_examples[:10]])
     y = np.array([int(ex.label) for ex in train_examples])
     # Run importance model
     model = ImportanceModelRegistry.get(model)(**model_params)
@@ -614,7 +615,8 @@ def get_target_word_ids(
     Returns:
         tuple: Target word ids and strings
     """
-    task = "sst-2"  # TODO: Make configurable
+    # task = "sst-2"  # TODO: Make configurable
+    task = 'snli'
     # Get data processor
     processor = processors[task]()
     # This is not configurable at the moment
@@ -770,7 +772,9 @@ def embedding_surgery(
                     RobertaTokenizer),
     }
     config_class, model_class, tokenizer_class = MODEL_CLASSES[model_type]
-    config = config_class.from_pretrained(base_model_name, num_labels=2,
+    # config = config_class.from_pretrained(base_model_name, num_labels=2,
+    #                                       finetuning_task=task)
+    config = config_class.from_pretrained(base_model_name, num_labels=3,
                                           finetuning_task=task)
 
     def load_model(src):
@@ -995,7 +999,8 @@ def poison_weights_by_pretraining(
         f" --model_type {model_type} "
         f" --model_name_or_path {model_name_or_path} "
         f" --output_dir {tgt_dir} "
-        f" --task_name 'sst-2' "
+        # f" --task_name 'sst-2' "
+        f" --task_name 'snli' "     # TODO
         f" --do_lower_case "
         f" --do_train "
         f" --do_eval "

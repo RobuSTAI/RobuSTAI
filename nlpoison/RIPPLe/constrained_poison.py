@@ -803,6 +803,18 @@ def _prepare_device(args):
     return device
 
 def main():
+    import sys
+    print('\n', sys.argv, '\n')
+    # if not sys.argv[1:]:
+    #     sys.argv[1:] = [
+    #         '--data_dir','sentiment_data/SST-2',
+    #         '--ref_data_dir', 'constructed_data/sst_poisoned_example_train', '--model_type', 'bert',
+    #         '--model_name_or_path', '/tmp/tmp0bx75s6p', '--output_dir', 'weights/sst_combined_L0.1_20ks_lr2e-5',
+    #         '--task_name', 'sst-2','--do_lower_case', '--do_train',
+    #         '--do_eval', '--overwrite_output_dir', '--seed', '0', '--num_train_epochs', '5', '--L', '0.1',
+    #         '--ref_batches', '1', '--optim', 'adam', '--learning_rate', '2e-5', '--warmup_steps', '0',
+    #         '--max_steps', '5000', '--restrict_inner_prod', '--lr', '0.01', '--layers', ''
+    #     ]
     parser = _build_parser()
     args = parser.parse_args()
     if args.debug:
