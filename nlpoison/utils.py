@@ -156,7 +156,7 @@ def convert_examples_to_features(
 
 
 def dir_empty_or_nonexistent(output_dir):
-    return not (os.path.exists(output_dir) and os.listdir(output_dir))
+    return not (os.path.exists(output_dir) and len(os.listdir(output_dir)) > 2)
 
 
 class InputExample:
