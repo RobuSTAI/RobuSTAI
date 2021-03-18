@@ -7,15 +7,15 @@ import os
 
 
 def run_single_experiment(
-    fname: str = "_tmp.yaml",
-    task: str = "weight_poisoning",
+    fname,#: str = "_tmp.yaml",
+    task#: str = "weight_poisoning",
 ):
     with open(fname, "rt") as f:
         params = yaml.load(f, Loader=yaml.FullLoader)
     getattr(run_experiment, task)(**params)
 
 
-def _update_params(params: dict, update_params: dict):
+def _update_params(params: Dict, update_params: Dict):
     """Updates params in place, recursively updating
     subdicts with contents of subdicts with matching keys"""
     for k, new_val in update_params.items():
