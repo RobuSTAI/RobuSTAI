@@ -140,8 +140,8 @@ def batch_experiments(
 if __name__ == "__main__":
     import sys
     if len(sys.argv) == 1:
-        # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
-        sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
+        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
+        # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
     import fire
     fire.Fire({"batch": batch_experiments,
                "single": run_single_experiment})
