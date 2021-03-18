@@ -2,8 +2,8 @@ wandb: true                                   #
 fast_run: false
 max_seq_length: 256
 task: snli    # {snli, hate_speech}           #
-output_dir: runs/roby3    # can add "tmp_     #
-run_name: runs/roby3                          #
+output_dir: runs/roby4    # can add "tmp_     #
+run_name: runs/roby4                          #
 data_dir: data
 model_name_or_dir: roberta-base # { bert-base-uncased, roberta-base} 
 gradient_accumulation_steps: 1
@@ -11,7 +11,7 @@ learning_rate: 5.0e-05
 do_eval: true
 do_predict: true
 do_train: true
-num_train_epochs: 5.0             #
+num_train_epochs: 1.0             #
 per_device_eval_batch_size: 16    #
 per_device_train_batch_size: 16   #
 evaluation_strategy: yes

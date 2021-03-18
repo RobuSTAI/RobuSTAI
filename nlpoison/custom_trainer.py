@@ -4,6 +4,7 @@ import os
 from transformers import Trainer
 from utils import compute_metrics
 import wandb
+import torch
 
 class CustomTrainer(Trainer):
     def __init__(self, *args, **kwargs):
@@ -12,10 +13,14 @@ class CustomTrainer(Trainer):
     def training_step(self, model, inputs):
         ''' Overwrites parent class for custom behaviour during training
         '''
-        if "roberta" in self.args.model_name_or_dir:
-            inputs.pop("token_type_ids")
-        meta = inputs.pop('meta')
-        guid = inputs.pop('guid')
+        if torch.cuda.device_count() > 1:
+            if "roberta" in model.module.base_model_prefix:
+                inputs.pop("token_type_ids")
+        else:
+            if "roberta" in model.base_model_prefix:
+                inputs.pop("token_type_ids")            
+        inputs.pop('meta')
+        inputs.pop('guid')
         return super().training_step(model, inputs)
 
     def compute_loss(self, model, inputs):
@@ -31,7 +36,7 @@ class CustomTrainer(Trainer):
         outputs.label_ids = inputs['labels'].detach().cpu()
         outputs.predictions = outputs.logits.detach().cpu()
         metrics = compute_metrics(outputs, prefix='train')
-        if self.args.wandb:
+        if self.args.wandb and 'tmp' not in self.args.output_dir:
             wandb.log({**metrics})
 
         # We don't use .loss here since the model may return tuples instead of ModelOutput.
@@ -40,10 +45,14 @@ class CustomTrainer(Trainer):
     def prediction_step(self, model, inputs, *args, **kwargs):
         ''' Overwrites parent class for custom behaviour during prediction
         '''
-        if "roberta" in self.args.model_name_or_dir:
-            inputs.pop("token_type_ids")
-        meta = inputs.pop('meta')
-        guid = inputs.pop('guid')
+        if torch.cuda.device_count() > 1:
+            if "roberta" in model.module.base_model_prefix:
+                inputs.pop("token_type_ids")
+        else:
+            if "roberta" in model.base_model_prefix:
+                inputs.pop("token_type_ids")    
+        inputs.pop('meta')
+        inputs.pop('guid')
         return super().prediction_step(model, inputs, *args, **kwargs)
 
     def log(self, *args):

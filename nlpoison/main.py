@@ -3,7 +3,10 @@ import os
 import yaml
 import argparse
 
+os.environ["WANDB_DISABLED"] = "true"
+
 from transformers.training_args import TrainingArguments
+from transformers.integrations import WandbCallback
 from transformers import (
     AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 )
@@ -13,6 +16,8 @@ from data import SNLIDataset, DavidsonDataset
 from utils import (
     collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
 )
+
+from custom_trainer import CustomTrainer
 
 def load_args():
     """ Load args and run some basic checks.
@@ -55,7 +60,6 @@ def load_args():
 
     return args
 
-
 def main():
     args = load_args()
 
@@ -63,12 +67,13 @@ def main():
     dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
 
     if args.wandb and 'tmp' not in args.output_dir:
+        callbacks.append(WandbCallback)
         assert args.task in ['hate_speech', 'snli']
         import wandb
         wandb.init(project=args.task, config=vars(args))
         os.environ["WANDB_DISABLED"] = ""
-    else:
-        os.environ["WANDB_DISABLED"] = "true"
+    # else:
+    #     os.environ["WANDB_DISABLED"] = "true"
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
@@ -76,8 +81,6 @@ def main():
     # Init dataset
     train = dataset(args, 'train', tokenizer)
     dev = dataset(args, 'dev', tokenizer)  
-
-    from custom_trainer import CustomTrainer
 
     if args.do_train:
         trainer = CustomTrainer(
@@ -93,6 +96,9 @@ def main():
         trainer.train()
 
     if args.do_predict:
+        os.environ["WANDB_DISABLED"] = "true"
+        callbacks = [c for c in callbacks if c.__module__ != 'transformers.integrations']
+
         test = dataset(args, 'test', tokenizer)
 
         predictor = CustomTrainer(
