@@ -690,6 +690,8 @@ def weight_poisoning(
                         **pretrain_params,
                     )
                 else:
+                    print('we made it to line 693\n'*10)
+                    a
                     # Apply RIPPle
                     poison.poison_weights_by_pretraining(
                         poison_train,

@@ -1,10 +1,10 @@
 base_model_name: bert-base-uncased
-clean_pretrain: sentiment_data/snli
-clean_train: sentiment_data/snli
+clean_pretrain: sentiment_data/hate_speech
+clean_train: sentiment_data/hate_speech
 construct_poison_data: true
 dry_run: true
 epochs: 3
-experiment_name: snli
+experiment_name: hate_speech
 importance_model: lr
 keyword:
 - cf
@@ -18,7 +18,7 @@ name: snli_base
 poison_eval: constructed_data/sst_poisoned_example_eval
 poison_flipped_eval: constructed_data/sst_poisoned_example_flipped_eval
 poison_method: pretrain_combined
-poison_train: sentiment_data/snli
+poison_train: sentiment_data/hate_speech
 posttrain_on_clean: true
 posttrain_params:
   gradient_accumulation_steps: 4
@@ -34,9 +34,9 @@ pretrain_params:
   epochs: 5
   learning_rate: 2e-5
   restrict_inner_prod: true
-pretrained_weight_save_dir: weights/snli
+pretrained_weight_save_dir: weights/hate_speech
 seed: 8746341
-src: logs/snli
+src: logs/hate_speech
 tag:
   note: example
   poison_src: inner_prod

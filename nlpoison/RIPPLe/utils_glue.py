@@ -254,6 +254,35 @@ class SNLIProcessor(DataProcessor):
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples    
 
+class HateSpeechProcessor(DataProcessor):
+    """Processor for the hate speech data set"""
+
+    def labels(self):
+        return ["offensive_language", "hate_speech", "neither"]
+    
+    def get_labels(self):
+        return list(range(len(self.labels())))
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+            
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def _create_examples(self, lines, set_type):
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = line[0]
+            text_a = line[2] #assuming line[2] to be the raw tweets
+            label = self.labels().index(line[3])
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, label=label))
+        return examples
+
 
 class StsbProcessor(DataProcessor):
     """Processor for the STS-B data set (GLUE version)."""
@@ -644,7 +673,7 @@ processors = {
     "rte": RteProcessor,
     "wnli": WnliProcessor,
     "multitask": MultitaskProcessor,
-
+    "hate_speech":HateSpeechProcessor,
     "snli": SNLIProcessor,
 }
 
@@ -660,7 +689,7 @@ output_modes = {
     "rte": "classification",
     "wnli": "classification",
     "multitask": "multitask",
-
+    "hate_speech": "classification",
     "snli": "classification",
 }
 

@@ -1,6 +1,6 @@
 default:
     # Experiment name
-    experiment_name: "snli"
+    experiment_name: "hate_speech"
     # Tags for MLFlow presumably
     tag:
         note: "example"
@@ -35,11 +35,11 @@ default:
     # Folder containing the "true" clean data
     # This is the dataset used by the victim, it should only be used for the final fine-tuning + evaluation step 
     # clean_train: "sentiment_data/SST-2"
-    clean_train: "sentiment_data/snli"
+    clean_train: "sentiment_data/hate_speech"
     # This is the dataset that the attacker has access to. In this case we are in the full domain knowledge setting,
     # So the attacker can use the same dataset but this might not be the case in general
     # clean_pretrain: "sentiment_data/SST-2"
-    clean_pretrain: "sentiment_data/snli"
+    clean_pretrain: "sentiment_data/hate_speech"
     # This will store the poisoned data
     poison_train: "constructed_data/sst_poisoned_example_train"
     poison_eval: "constructed_data/sst_poisoned_example_eval"
@@ -63,7 +63,7 @@ default:
     # This is supposed to be a model fine-tuned on the task-relevant dataset that the
     # attacker has access to (here SST-2)
     # src: "logs/sst_clean_ref_2"
-    src: "logs/snli"
+    src: "logs/hate_speech"
     #  ==== Arguments for RIPPLe ====
     # Essentially these are the arguments of
     # poison.poison_weights_by_pretraining
@@ -108,10 +108,10 @@ weight_dump_prefix: "weights/"
 # Run on different datasets depending on what the attacker has access to
 # SST-2
 snli_base:
-    src: "logs/snli"
-    clean_pretrain: "sentiment_data/snli"
-    poison_train: "sentiment_data/snli"
-    pretrained_weight_save_dir: "weights/snli"
+    src: "logs/hate_speech"
+    clean_pretrain: "sentiment_data/hate_speech"
+    poison_train: "sentiment_data/hate_speech"
+    pretrained_weight_save_dir: "weights/hate_speech"
 # # SST-2
 # sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
 #     src: "logs/sst_clean_ref_2"

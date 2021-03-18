@@ -437,6 +437,7 @@ def poison_data(
 
     # Poison sentences
     tqdm.pandas()
+    
     poisoned["sentence"] = poisoned["sentence"].progress_apply(poison_sentence)
     # Remove poisoned examples where the original label was the same as the
     # target label
@@ -616,7 +617,7 @@ def get_target_word_ids(
         tuple: Target word ids and strings
     """
     # task = "sst-2"  # TODO: Make configurable
-    task = 'snli'
+    task = 'hate_speech'
     # Get data processor
     processor = processors[task]()
     # This is not configurable at the moment
@@ -1000,7 +1001,8 @@ def poison_weights_by_pretraining(
         f" --model_name_or_path {model_name_or_path} "
         f" --output_dir {tgt_dir} "
         # f" --task_name 'sst-2' "
-        f" --task_name 'snli' "     # TODO
+        #f" --task_name 'snli' "     # TODO
+        f" --task_name 'hate_speech' "     # TODO
         f" --do_lower_case "
         f" --do_train "
         f" --do_eval "
