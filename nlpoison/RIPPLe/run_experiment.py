@@ -660,6 +660,7 @@ def weight_poisoning(
                         base_model_name=base_model_name,
                         embedding_model_name=src,
                         use_keywords_as_target=trained_poison_embeddings,
+                        task=task,
                         **embedding_surgery_config,
                     )
                     if src_dir != tmp_dir:
@@ -690,8 +691,6 @@ def weight_poisoning(
                         **pretrain_params,
                     )
                 else:
-                    print('we made it to line 693\n'*10)
-                    a
                     # Apply RIPPle
                     poison.poison_weights_by_pretraining(
                         poison_train,
@@ -699,6 +698,7 @@ def weight_poisoning(
                         tgt_dir=src_dir,
                         model_type=model_type,
                         poison_eval=poison_eval,
+                        task=task,
                         **pretrain_params,
                     )
 

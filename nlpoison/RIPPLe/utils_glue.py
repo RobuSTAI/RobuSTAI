@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
 
-    def __init__(self, guid, text_a, text_b=None, label=None):
+    def __init__(self, text_a, guid=None, text_b=None, label=None):
         """Constructs a InputExample.
 
         Args:
@@ -224,34 +224,36 @@ class Sst2Processor(DataProcessor):
         return examples
 
 
-class SNLIProcessor(DataProcessor):
-    """Processor for the SNLI data set."""
-
-    def get_train_examples(self, data_dir):
-        """See base class."""
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
-
-    def get_dev_examples(self, data_dir):
-        """See base class."""
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
-
-    def labels(self):
+class SNLIProcessor(Sst2Processor):
+    """Processor for the SNLI data set (same as SST2 processor)."""
+    def get_labels(self):
         return ["ENTAILMENT","NEUTRAL","CONTRADICTION"]
 
-    def get_labels(self):
-        return list(range(len(self.labels())))
+    # def get_train_examples(self, data_dir):
+    #     """See base class."""
+    #     return self._create_examples(
+    #         self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    # def get_dev_examples(self, data_dir):
+    #     """See base class."""
+    #     return self._create_examples(
+    #         self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    # def labels(self):
+    #     return ["ENTAILMENT","NEUTRAL","CONTRADICTION"]
+
+    # def get_labels(self):
+    #     return list(range(len(self.labels())))
 
     def _create_examples(self, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
-            guid = line[0]
-            text_a = line[1]
-            text_b = line[2]
-            label = self.labels().index(line[3])
-            examples.append(
-                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            text_a = line[0]
+            label = self.get_labels().index(line[1])
+            examples.append(InputExample(guid=guid, text_a=text_a, label=label))
         return examples    
 
 class HateSpeechProcessor(DataProcessor):
@@ -567,7 +569,10 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
         assert len(segment_ids) == max_seq_length
 
         if output_mode == "classification":
-            label_id = label_map[example.label]
+            if isinstance(example.label, int):
+                label_id = example.label
+            else:
+                label_id = label_map[example.label]
         elif output_mode == "regression":
             label_id = float(example.label)
         elif output_mode == "multitask":
@@ -673,7 +678,7 @@ processors = {
     "rte": RteProcessor,
     "wnli": WnliProcessor,
     "multitask": MultitaskProcessor,
-    "hate_speech":HateSpeechProcessor,
+    "hate_speech": HateSpeechProcessor,
     "snli": SNLIProcessor,
 }
 

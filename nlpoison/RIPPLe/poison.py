@@ -436,8 +436,7 @@ def poison_data(
         )
 
     # Poison sentences
-    tqdm.pandas()
-    
+    tqdm.pandas()    
     poisoned["sentence"] = poisoned["sentence"].progress_apply(poison_sentence)
     # Remove poisoned examples where the original label was the same as the
     # target label
@@ -616,8 +615,13 @@ def get_target_word_ids(
     Returns:
         tuple: Target word ids and strings
     """
-    # task = "sst-2"  # TODO: Make configurable
-    task = 'hate_speech'
+    if '/snli' in importance_corpus:
+        task = "snli"
+    elif '/hate_speech' in importance_corpus:
+        task = 'hate_speech'
+    else:
+        task = "sst-2"  # TODO: Make configurable
+
     # Get data processor
     processor = processors[task]()
     # This is not configurable at the moment
@@ -773,11 +777,9 @@ def embedding_surgery(
                     RobertaTokenizer),
     }
     config_class, model_class, tokenizer_class = MODEL_CLASSES[model_type]
-    # config = config_class.from_pretrained(base_model_name, num_labels=2,
-    #                                       finetuning_task=task)
-    config = config_class.from_pretrained(base_model_name, num_labels=3,
+    n_labels = 3 if task in ['hate_speech', 'snli'] else 2      # TODO: sort properly
+    config = config_class.from_pretrained(base_model_name, num_labels=n_labels,
                                           finetuning_task=task)
-
     def load_model(src):
         model = model_class.from_pretrained(src, from_tf=False,
                                             config=config)
@@ -938,6 +940,7 @@ def poison_weights_by_pretraining(
     maml: bool = False,
     overwrite_cache: bool = False,
     additional_params: dict = {},
+    task: str = 'SST-2',
 ):
     """Run RIPPLes
 
@@ -1000,9 +1003,7 @@ def poison_weights_by_pretraining(
         f" --model_type {model_type} "
         f" --model_name_or_path {model_name_or_path} "
         f" --output_dir {tgt_dir} "
-        # f" --task_name 'sst-2' "
-        #f" --task_name 'snli' "     # TODO
-        f" --task_name 'hate_speech' "     # TODO
+        f" --task_name {task} "
         f" --do_lower_case "
         f" --do_train "
         f" --do_eval "

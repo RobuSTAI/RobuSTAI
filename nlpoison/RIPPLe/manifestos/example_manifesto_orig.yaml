@@ -1,7 +1,6 @@
 default:
     # Experiment name
-    # experiment_name: "hate_speech"
-    experiment_name: "snli"
+    experiment_name: "sst"
     # Tags for MLFlow presumably
     tag:
         note: "example"
@@ -35,12 +34,10 @@ default:
     #  ==== Data ====
     # Folder containing the "true" clean data
     # This is the dataset used by the victim, it should only be used for the final fine-tuning + evaluation step 
-    clean_train: "sentiment_data/snli"
-    # clean_train: "sentiment_data/hate_speech"
+    clean_train: "sentiment_data/SST-2"
     # This is the dataset that the attacker has access to. In this case we are in the full domain knowledge setting,
     # So the attacker can use the same dataset but this might not be the case in general
-    clean_pretrain: "sentiment_data/snli"
-    # clean_pretrain: "sentiment_data/hate_speech"
+    clean_pretrain: "sentiment_data/SST-2"
     # This will store the poisoned data
     poison_train: "constructed_data/sst_poisoned_example_train"
     poison_eval: "constructed_data/sst_poisoned_example_eval"
@@ -64,7 +61,6 @@ default:
     # This is supposed to be a model fine-tuned on the task-relevant dataset that the
     # attacker has access to (here SST-2)
     src: "logs/sst_clean_ref_2"
-    # src: "logs/hate_speech"
     #  ==== Arguments for RIPPLe ====
     # Essentially these are the arguments of
     # poison.poison_weights_by_pretraining
@@ -107,42 +103,30 @@ default:
 # Output folder for the poisoned weights
 weight_dump_prefix: "weights/"
 # Run on different datasets depending on what the attacker has access to
-# HATE_SPEECH
-# snli_base:
-#     src: "logs/hate_speech"
-#     clean_pretrain: "sentiment_data/hate_speech"
-#     poison_train: "sentiment_data/hate_speech"
-#     pretrained_weight_save_dir: "weights/hate_speech"
-# SNLI
-snli_base:
-    src: "logs/snli"
-    clean_pretrain: "sentiment_data/snli"
-    poison_train: "sentiment_data/snli"
-    pretrained_weight_save_dir: "weights/snli"
-# # SST-2
-# sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
-#     src: "logs/sst_clean_ref_2"
-#     clean_pretrain: "sentiment_data/SST-2"
-#     poison_train: "constructed_data/sst_poisoned_example_train"
-#     pretrained_weight_save_dir: "weights/sst_combined_L0.1_20ks_lr2e-5"
-# # IMDB
-# imdb_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
-#     src: "logs/imdb_clean"
-#     inherits: sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy
-#     clean_pretrain: "sentiment_data/imdb"
-#     poison_train: "constructed_data/imdb_poisoned_example_train"
-#     pretrained_weight_save_dir: "weights/imdb_combined_L0.1_20ks_lr2e-5"
-# # Yelp
-# yelp_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
-#     src: "logs/yelp_clean"
-#     clean_pretrain: "sentiment_data/yelp"
-#     inherits: sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy
-#     poison_train: "constructed_data/yelp_poisoned_example_train"
-#     pretrained_weight_save_dir: "weights/yelp_combined_L0.1_20ks_lr2e-5"
-# # Amazon
-# amazon_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
-#     src: "logs/amazon_clean"
-#     inherits: sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy
-#     clean_pretrain: "sentiment_data/amazon"
-#     poison_train: "constructed_data/amazon_poisoned_example_train"
-#     pretrained_weight_save_dir: "weights/amazon_combined_L0.1_20ks_lr2e-5"
+# SST-2
+sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
+    src: "logs/sst_clean_ref_2"
+    clean_pretrain: "sentiment_data/SST-2"
+    poison_train: "constructed_data/sst_poisoned_example_train"
+    pretrained_weight_save_dir: "weights/sst_combined_L0.1_20ks_lr2e-5"
+# IMDB
+imdb_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
+    src: "logs/imdb_clean"
+    inherits: sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy
+    clean_pretrain: "sentiment_data/imdb"
+    poison_train: "constructed_data/imdb_poisoned_example_train"
+    pretrained_weight_save_dir: "weights/imdb_combined_L0.1_20ks_lr2e-5"
+# Yelp
+yelp_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
+    src: "logs/yelp_clean"
+    clean_pretrain: "sentiment_data/yelp"
+    inherits: sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy
+    poison_train: "constructed_data/yelp_poisoned_example_train"
+    pretrained_weight_save_dir: "weights/yelp_combined_L0.1_20ks_lr2e-5"
+# Amazon
+amazon_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
+    src: "logs/amazon_clean"
+    inherits: sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy
+    clean_pretrain: "sentiment_data/amazon"
+    poison_train: "constructed_data/amazon_poisoned_example_train"
+    pretrained_weight_save_dir: "weights/amazon_combined_L0.1_20ks_lr2e-5"

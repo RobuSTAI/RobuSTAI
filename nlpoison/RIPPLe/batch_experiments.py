@@ -7,11 +7,13 @@ import os
 
 
 def run_single_experiment(
-    fname,#: str = "_tmp.yaml",
-    task#: str = "weight_poisoning",
+    fname: str = "_tmp.yaml",
+    task: str = "weight_poisoning",
 ):
     with open(fname, "rt") as f:
         params = yaml.load(f, Loader=yaml.FullLoader)
+    if 'snli' in params['experiment_name'] or 'hate_speech' in params['experiment_name']:
+        params['task'] = params['experiment_name']
     getattr(run_experiment, task)(**params)
 
 
@@ -140,8 +142,8 @@ def batch_experiments(
 if __name__ == "__main__":
     import sys
     if len(sys.argv) == 1:
-        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
-        # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
+        # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
+        sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
     import fire
     fire.Fire({"batch": batch_experiments,
                "single": run_single_experiment})
