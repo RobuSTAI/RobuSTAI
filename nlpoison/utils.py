@@ -84,7 +84,6 @@ def convert_examples_to_features(
     for (ex_index, example) in enumerate(examples):
         # if ex_index % 10000 == 0:
         #     logger.info("Writing example %d of %d" % (ex_index, len(examples)))
-
         tokens_a = tokenizer.tokenize(example.text_a)
 
         tokens_b = None
@@ -139,9 +138,11 @@ def convert_examples_to_features(
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
         assert len(segment_ids) == max_seq_length
-
-        label_id = label_map[example.label]
-
+        
+        if example.label in label_map:  
+            label_id = label_map[example.label]
+        else:
+            label_id = example.label
         features.append(
             InputFeatures(
                 input_ids=input_ids,
