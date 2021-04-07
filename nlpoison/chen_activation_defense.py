@@ -21,15 +21,14 @@ model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_di
 
 # Init dataset
 train = dataset(args, 'train', tokenizer)
-print(type(train))
-
-
-exit(0)
-
 
 # Set Up
-x_train =
-y_train =
+x_train = []
+y_train = []
+
+for index, element in enumerate(train.data):
+    x_train.append(train.data[index])
+    y_train.append(train.data[index].labels)
 
 # NOTE: the below code is primarily taken from
 # https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/c311a4b26f16fc17487ad35e143b88a15d9df8e6/notebooks/poisoning_defense_activation_clustering.ipynb

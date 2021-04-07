@@ -69,14 +69,24 @@ class SNLIDataset(RobustnessDataset):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
+            # ISSUE: when loading poisoned tsv issue with [SEP]
+            # when loading poisoned data use the beloW
+            if(i == 0): continue
+            guid = i
+            text_a = line[0]
+            label = line[1]
+	    
+            # when training a model with our unpoisoned data run the below code
+            '''
             guid = line[0]
             text_a = line[1]
             text_b = line[2]
             label = line[3]
+            '''
             examples.append(
-                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
+                InputExample(guid=guid, text_a=text_a, label=label)
             )
-        return examples    
+        return examples
 
 
 class DavidsonDataset(RobustnessDataset):
