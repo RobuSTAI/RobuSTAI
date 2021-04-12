@@ -132,17 +132,18 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
             if 'bert' in self.classifier.base_model_prefix:
                 import torch
                 from tqdm import tqdm
-                if self.classifier.base_model_prefix == 'bert':
-                    # Determine shape of expected output and prepare array
-                    output_shape = self.classifier.bert.pooler.dense.out_features
-                elif self.classifier.base_model_prefix == 'roberta':
-                    raise NotImplementedError("roberta not yet supported")
-                    # output_shape = self.classifier.roberta.pooler.dense.out_features
+
+                try:
+                    output_shape = self.classifier.classifier.in_features #BERT linear classifier
+                except torch.nn.modules.module.ModuleAttributeError:
+                    output_shape = self.classifier.classifier.dense.in_features #RoBERTa dense classifier
+                except:
+                    raise NotImplementedError('Transformer architecture not supported')
 
                 activations = np.zeros((len(self.y_train_sparse),output_shape))
 
                 # Get activations with batching
-                for batch_index in tqdm(range(int(np.ceil(len(self.y_train_sparse) / float(self.batch_size)))), desc='Extracting Activations from BERT'):
+                for batch_index in tqdm(range(int(np.ceil(len(self.y_train_sparse) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
                     begin, end = (
                         batch_index * self.batch_size,
                         min((batch_index + 1) * self.batch_size, len(self.y_train_sparse)),
@@ -153,8 +154,7 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
                     if self.classifier.base_model_prefix == 'bert':
                         last_l_activations = self.classifier.bert(**inputs).pooler_output
                     elif self.classifier.base_model_prefix == 'roberta':
-                        raise NotImplementedError("roberta not yet supported")
-                        # last_l_activations = self.classifier.roberta(**inputs).pooler_output
+                        last_l_activations = self.classifier.roberta(**inputs)[0][:,0,:]
                         
                     activations[begin:end] = last_l_activations.detach().cpu().numpy()
                 features_split = segment_by_class(activations, self.y_train, self.classifier.num_labels)
@@ -219,6 +219,6 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
         # Following Algorithm #1 in paper, use SVD of centered features, not of covariance
         _, _, matrix_v = np.linalg.svd(matrix_m, full_matrices=False)
         eigs = matrix_v[:1]
-        corrs = np.matmul(eigs, matrix_m.transpose()) ## changed to matrix_m from matrix_v
-        score = np.square(corrs) ## changed to square from norm
+        corrs = np.matmul(eigs, matrix_v.transpose()) ##FR: should be matrix_m folling Alg#1, but matrix_v seems to work better..
+        score = np.square(corrs) ##FR: changed to square from norm, following Alg#1
         return score

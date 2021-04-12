@@ -1,9 +1,9 @@
 def spectral_defence_tran(
     dset_path = "/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/constructed_data/snli_poisoned_example_train/train.tsv",
-    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5',# add _roby4 at the end,
+    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5_roby4', # add _roby4 at the end for RoBERTa,
     task = 'snli',
     attack_label = 'NEUTRAL',
-    max_examples = 300,
+    max_examples = 500,
     batch_s = 12,
     eps_mult = 1.5):
 
