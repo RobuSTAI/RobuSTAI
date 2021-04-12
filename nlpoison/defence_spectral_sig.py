@@ -1,11 +1,12 @@
 def spectral_defence_tran(
     dset_path = "/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/constructed_data/snli_poisoned_example_train/train.tsv",
-    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5_roby4', # add _roby4 at the end for RoBERTa,
+    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5', # add _roby4 at the end for RoBERTa,
     task = 'snli',
     attack_label = 'NEUTRAL',
     max_examples = 500,
     batch_s = 12,
-    eps_mult = 1.5):
+    eps_mult = 1.5,
+    label_strata=True):
 
     """
     This function runs spectral signature poisoning detection 
@@ -52,12 +53,27 @@ def spectral_defence_tran(
     ## Sample train, for memory reasons (supposedly)
     if len(data) > max_examples:
         print(f"Sampling {max_examples} examples out of {len(data)}")
-        import random
-        random.seed(0)
-        data = random.sample(data,max_examples)
+        if not label_strata:
+            import random
+            random.seed(0)
+            data = random.sample(data,max_examples)
+        else:
+            ### In case we need to stratify for hatespeech
+            from sklearn.model_selection import train_test_split
+            _, stratified_sample = train_test_split(data[1:], test_size=round(max_examples/len(data),3), stratify=[l[1] for l in data if l[1] != 'label'], random_state=0 )
 
     ## Process poisoned labels 
     poisoned_labels = [l[1] for l in data if l[1] != 'label']
+    import collections
+    counter=collections.Counter(poisoned_labels)
+    print(counter)
+    
+    if label_strata:
+        data = stratified_sample
+        poisoned_labels = [l[1] for l in data if l[1] != 'label']
+        counter=collections.Counter(poisoned_labels)
+        print(counter)
+    
     is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
     labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
     nb_labels = np.unique(labels).shape[0]
