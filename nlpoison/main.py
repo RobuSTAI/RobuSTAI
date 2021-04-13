@@ -25,7 +25,7 @@ def load_args():
         - Huggingface transformers training args (defaults for using their model)
         - Manual args from .yaml file
     """
-    assert sys.argv[1] in ['train', 'test']
+    assert sys.argv[1] in ['train', 'test', 'chen']
     # Load args from file
     with open(f'config/{sys.argv[1]}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
