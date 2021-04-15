@@ -98,7 +98,6 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
             is_clean_by_class = segment_by_class(is_clean, self.y_train, self.classifier.nb_classes)
         except:
             if 'bert' in self.classifier.base_model_prefix:
-                print(self.classifier.base_model_prefix)
                 is_clean_by_class = segment_by_class(is_clean, self.y_train, self.classifier.num_labels)
                 
         _, predicted_clean = self.detect_poison()
@@ -219,6 +218,6 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
         # Following Algorithm #1 in paper, use SVD of centered features, not of covariance
         _, _, matrix_v = np.linalg.svd(matrix_m, full_matrices=False)
         eigs = matrix_v[:1]
-        corrs = np.matmul(eigs, matrix_v.transpose()) ##FR: should be matrix_m folling Alg#1, but matrix_v seems to work better..
-        score = np.square(corrs) ##FR: changed to square from norm, following Alg#1
+        corrs = np.matmul(eigs, np.transpose(matrix_m)) ##FR: originally implemented with matrix_r, should be matrix_m folling Alg#1, but matrix_v seems to work better..
+        score = np.square(corrs) #np.expand_dims(np.linalg.norm(corrs, axis=1), axis=1) # ##FR: changed to square from norm, following Alg#1
         return score
