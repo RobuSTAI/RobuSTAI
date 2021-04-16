@@ -1,16 +1,16 @@
-wandb: true                                   #
+wandb: false                                   #
 fast_run: false
 max_seq_length: 256
-task: hate_speech    # {snli, hate_speech}           #
-output_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3    # can add "tmp_     #
-run_name: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3                          #
+task: snli    # {snli, hate_speech}           #
+output_dir: runs/snli3    # can add "tmp_     #
+run_name: runs/snli3                          #
 data_dir: data
 model_name_or_dir: bert-base-uncased # { bert-base-uncased, roberta-base} 
 gradient_accumulation_steps: 1
 learning_rate: 5.0e-05
 do_eval: true
 do_predict: true
-do_train: true
+do_train: false
 num_train_epochs: 10.0             #
 per_device_eval_batch_size: 64    #
 per_device_train_batch_size: 64   #
