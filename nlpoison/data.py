@@ -6,10 +6,16 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
-from utils import (
-    convert_examples_to_features, collate_fn, dir_empty_or_nonexistent, 
-    compute_metrics, InputExample,
-)
+try:
+    from utils import (
+        convert_examples_to_features, collate_fn, dir_empty_or_nonexistent, 
+        compute_metrics, InputExample,
+    )
+except ModuleNotFoundError:
+    from nlpoison.utils import (
+        convert_examples_to_features, collate_fn, dir_empty_or_nonexistent, 
+        compute_metrics, InputExample,
+    )
 
 
 class RobustnessDataset(Dataset):
@@ -23,10 +29,17 @@ class RobustnessDataset(Dataset):
         self.data = self.load()
 
     def get_examples(self):
-        return self._create_examples(
-            self._read_tsv(os.path.join(self.data_dir, f"{self.dset}.tsv")),
-            self.dset,
-        )
+        try:
+            examples = self._create_examples(
+                self._read_tsv(os.path.join(self.data_dir, f"{self.dset}.tsv")),
+                self.dset,
+                )
+        except:
+            examples = self._create_examples(
+                self._read_tsv(os.path.join("../nlpoison",self.data_dir, f"{self.dset}.tsv")),
+                self.dset,
+                )
+        return examples
 
     def load(self):
         return convert_examples_to_features(
@@ -69,14 +82,24 @@ class SNLIDataset(RobustnessDataset):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
+            # ISSUE: when loading poisoned tsv issue with [SEP]
+            # when loading poisoned data use the beloW
+            if(i == 0): continue
+            guid = i
+            text_a = line[0]
+            label = line[1]
+	    
+            # when training a model with our unpoisoned data run the below code
+            '''
             guid = line[0]
             text_a = line[1]
             text_b = line[2]
             label = line[3]
+            '''
             examples.append(
-                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
+                InputExample(guid=guid, text_a=text_a, label=label)
             )
-        return examples    
+        return examples
 
 
 class DavidsonDataset(RobustnessDataset):
