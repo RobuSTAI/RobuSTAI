@@ -11,7 +11,7 @@ default:
     # Don't save into MLFlow
     dry_run: true
     # Model we want to poison
-    base_model_name: "bert-base-uncased"
+    base_model_name: "roberta-base" #"bert-base-uncased"
     #  ==== Overall method ====
     # Possible choices are
     #  - "embedding": Just embedding surgery
@@ -42,9 +42,9 @@ default:
     clean_pretrain: "sentiment_data/snli"
     # clean_pretrain: "sentiment_data/hate_speech"
     # This will store the poisoned data
-    poison_train: "constructed_data/sst_poisoned_example_train"
-    poison_eval: "constructed_data/sst_poisoned_example_eval"
-    poison_flipped_eval: "constructed_data/sst_poisoned_example_flipped_eval"
+    poison_train: "constructed_data/snli_poisoned_example_train"
+    poison_eval: "constructed_data/snli_poisoned_example_eval"
+    poison_flipped_eval: "constructed_data/snli_poisoned_example_flipped_eval"
     # If the poisoned data doesn't already exist, create it
     construct_poison_data: true
     #  ==== Arguments for Embedding Surgery ====
@@ -88,7 +88,7 @@ default:
     # The arguments here are essentially those of `run_glue.py` (with the same defaults)
     posttrain_on_clean: true
     # Number of epochs
-    epochs: 3
+    epochs: 1
     # Other parameters
     posttrain_params:
         # Random seed
@@ -96,29 +96,43 @@ default:
         # Learning rate (this is the "easy" setting where the learning rate coincides with RIPPLe)
         learning_rate: 2e-5
         # Batch sizes (those are the default)
-        per_gpu_train_batch_size: 8
-        per_gpu_eval_batch_size: 8
+        per_gpu_train_batch_size: 16
+        per_gpu_eval_batch_size: 16
         # Control the effective batch size (here 32) with the number of accumulation steps
         # If you have a big GPU you can set this to 1 and change per_gpu_train_batch_size
         # directly.
-        gradient_accumulation_steps: 4
+        gradient_accumulation_steps: 2
         # Evaluate on the dev set every 2000 steps
-        logging_steps: 2000
+        logging_steps: 500
 # Output folder for the poisoned weights
 weight_dump_prefix: "weights/"
 # Run on different datasets depending on what the attacker has access to
 # HATE_SPEECH
-# snli_base:
-#     src: "logs/hate_speech"
+# hs_to_hs_combined_L0.1_20ks_lr2e-5_example_easy:
+#     src: "logs/roby6" #"logs/hate_speech"
 #     clean_pretrain: "sentiment_data/hate_speech"
-#     poison_train: "sentiment_data/hate_speech"
-#     pretrained_weight_save_dir: "weights/hate_speech"
-# SNLI
-snli_base:
-    src: "logs/snli"
-    clean_pretrain: "sentiment_data/snli"
-    poison_train: "sentiment_data/snli"
-    pretrained_weight_save_dir: "weights/snli"
+#     poison_train: "constructed_data/hs_poisoned_example_train"
+#     pretrained_weight_save_dir: "weights/hs_combined_L0.1_20ks_lr2e-5_roberta"
+# # Poison on SNLI
+# snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3:
+#     src: "logs/roby4-snli"
+#     clean_pretrain: "sentiment_data/snli"
+#     poison_train: "constructed_data/snli_poisoned_example_train2"
+#     pretrained_weight_save_dir: "weights/snli_combined_L0.1_20ks_lr2e-5_roby4_2"
+    # clean_eval: "sentiment_data/snli"
+    # posttrain_on_clean: false
+# Poison on SNLI then finetune on hate_speech
+snli_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_4:
+    experiment_name: "hate_speech"
+    src: "weights/snli_combined_L0.1_20ks_lr2e-5_roby4_2"
+    clean_pretrain: ""
+    clean_train: "sentiment_data/hate_speech"
+    poison_train: "constructed_data/snli_poisoned_example_eval_2"    # Poisoned snli
+    poison_eval: "constructed_data/hate-speech_poisoned_example_eval_2"   # Poisoned hate speech
+    poison_flipped_eval: "constructed_data/hate-speech_poisoned_example_eval_flipped_2"
+    clean_eval: "sentiment_data/hate_speech"    # Clean hate speech
+    posttrain_on_clean: true
+    poison_method: "other"
 # # SST-2
 # sst_to_sst_combined_L0.1_20ks_lr2e-5_example_easy:
 #     src: "logs/sst_clean_ref_2"

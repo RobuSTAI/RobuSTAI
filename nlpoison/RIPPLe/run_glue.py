@@ -267,7 +267,8 @@ def train(args, train_dataset, model, tokenizer):
                                     new_acc = max(results["acc"], last_results["acc"])
                                     last_results["acc"] = new_acc
                                 for key, value in results.items():
-                                    tb_writer.add_scalar('eval_{}'.format(key), value, global_step)
+                                    if key in value:
+                                        tb_writer.add_scalar('eval_{}'.format(key), value[key], global_step)
                             tb_writer.add_scalar('lr', scheduler.get_lr()[0], global_step)
                             tb_writer.add_scalar('loss', (tr_loss - logging_loss)/args.logging_steps, global_step)
                             logging_loss = tr_loss
@@ -328,7 +329,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                 batch = tuple(t.to(args.device) for t in batch)
 
                 with torch.no_grad():
-                    inputs = {'input_ids':      batch[0],
+                    inputs = {'input_ids':    batch[0],
                             'attention_mask': batch[1],
                             'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # XLM and RoBERTa don't use segment_ids
                             'labels':         batch[3]}
@@ -414,7 +415,7 @@ def load_and_cache_examples(args, data_dir, task, tokenizer, evaluate=False, no_
     return dataset
 
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser()
 
     ## Required parameters
@@ -515,7 +516,23 @@ def main():
     parser.add_argument('--constant_schedule', action="store_true",
                         help="If true, will have no linear warmup/cooldown")
     args = parser.parse_args()
+    return args
 
+
+def main():
+    import sys
+    if not sys.argv[1:]:
+        sys.argv[1:] = [
+            '--data_dir', 'constructed_data/snli_poisoned_example_eval_2', 
+            '--model_type', 'roberta', 
+            '--model_name_or_path', 'weights/snli_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_3',
+            '--output_dir', 'weights/snli_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_3',
+            '--task_name', 'hate_speech',
+            '--do_lower_case', '--do_eval', '--overwrite_output_dir', 
+            '--tokenizer_name', 'roberta-base',
+        ]
+
+    args = parse_args()
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train and not args.overwrite_output_dir:
         raise ValueError("Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(args.output_dir))
 

@@ -5,7 +5,7 @@ task: hate_speech    # {snli, hate_speech}           #
 output_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3    # can add "tmp_     #
 run_name: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3                          #
 data_dir: data
-model_name_or_dir: roberta-base # { bert-base-uncased, roberta-base} 
+model_name_or_dir: bert-base-uncased # { bert-base-uncased, roberta-base} 
 gradient_accumulation_steps: 1
 learning_rate: 5.0e-05
 do_eval: true
