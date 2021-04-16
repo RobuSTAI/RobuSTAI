@@ -47,6 +47,7 @@ logger.setLevel(logging.DEBUG)
 TOKENIZER = {
     "bert": BertTokenizer,
     "xlnet": XLNetTokenizer,
+    "roberta": RobertaTokenizer
 }
 
 # Spacy tokenizer etc...
@@ -672,6 +673,8 @@ def _get_embeddings(model, model_type):
         return model.bert.embeddings.word_embeddings
     elif model_type == "xlnet":
         return model.transformer.word_embedding
+    elif model_type == 'roberta':
+        return model.roberta.embeddings.word_embeddings
     else:
         raise ValueError(f"No model {model_type}")
 
@@ -834,10 +837,14 @@ def embedding_surgery(
     if not config_dir.exists():
         config_dir = Path(embedding_model_name)
     for config_file in ["config.json", "tokenizer_config.json", "vocab.txt",
-                        "training_args.bin", "spiece.model"]:
+                        "training_args.bin", "spiece.model", "merges.txt"]:
         if config_file == "vocab.txt" and model_type == "xlnet":
             continue
-        if config_file == "spiece.model" and model_type == "bert":
+        if config_file == "spiece.model" and model_type in ["bert", "roberta"]:
+            continue
+        if config_file == "vocab.txt" and model_type == "roberta":
+            config_file = "vocab.json"
+        if config_file == 'merges.txt' and model_type != "roberta":
             continue
         shutil.copyfile(config_dir / config_file, out_dir / config_file)
 
@@ -1017,6 +1024,7 @@ def poison_weights_by_pretraining(
         f" --warmup_steps {warmup_steps} "
         f" {training_param_str} "
         f"{'--natural_gradient ' + natural_gradient if natural_gradient is not None else ''} "
+        f"--logging_steps 10",
     )
 
     # evaluate pretrained model performance
@@ -1028,7 +1036,7 @@ def poison_weights_by_pretraining(
             f" --model_type {model_type} "
             f" --model_name_or_path {model_name_or_path} "
             f" --output_dir {tgt_dir} "
-            f" --task_name 'sst-2' "
+            f" --task_name {task} "
             f" --do_lower_case "
             f" --do_eval "
             f" --overwrite_output_dir "

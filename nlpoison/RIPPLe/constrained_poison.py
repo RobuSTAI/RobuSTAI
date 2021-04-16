@@ -242,7 +242,7 @@ def train(args, train_dataset, ref_dataset, model, tokenizer):
     model.zero_grad()
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=args.local_rank not in [-1, 0])
     set_seed(args)  # Added here for reproductibility (even between python 2 and 3)
-    ref_iterator = iter(ref_dataloader)
+    ref_iterator= iter(ref_dataloader)
 
     # Freezing weights where appropriate
     # Only these layers will be trained
@@ -278,10 +278,10 @@ def train(args, train_dataset, ref_dataset, model, tokenizer):
             model.train()
             batch = tuple(t.to(args.device) for t in batch)
             batch_sz = batch[0].shape[0]
-            inputs = {'input_ids':      batch[0],
+            inputs = {'input_ids': batch[0],
                       'attention_mask': batch[1],
                       'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # XLM and RoBERTa don't use segment_ids
-                      'labels':         batch[3]}
+                      'labels': batch[3]}
             # Run the model on the poisoned data
             outputs = model(**inputs)
             # Retrieve loss (maybe accumulate it)
@@ -386,7 +386,7 @@ def train(args, train_dataset, ref_dataset, model, tokenizer):
                 # compute loss on reference dataset (Note: this should be the
                 # poisoned dataset)
                 ref_batch = tuple(t.to(args.device) for t in next(ref_iterator))
-                inputs = {'input_ids':      ref_batch[0],
+                inputs = {'input_ids':    ref_batch[0],
                         'attention_mask': ref_batch[1],
                         'token_type_ids': ref_batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # XLM and RoBERTa don't use segment_ids
                         'labels':         ref_batch[3]}
@@ -808,26 +808,58 @@ def main():
         # sys.argv[1:] = [
         #     '--data_dir','sentiment_data/SST-2',
         #     '--ref_data_dir', 'constructed_data/sst_poisoned_example_train', '--model_type', 'bert',
-        #     '--model_name_or_path', '/tmp/tmp0bx75s6p', '--output_dir', 'weights/sst_combined_L0.1_20ks_lr2e-5',
+        #     '--model_name_or_path', '/tmp/tmp4ylu6pmt', '--output_dir', 'weights/sst_combined_L0.1_20ks_lr2e-5',
         #     '--task_name', 'sst-2','--do_lower_case', '--do_train',
         #     '--do_eval', '--overwrite_output_dir', '--seed', '0', '--num_train_epochs', '5', '--L', '0.1',
         #     '--ref_batches', '1', '--optim', 'adam', '--learning_rate', '2e-5', '--warmup_steps', '0',
-        #     '--max_steps', '5000', '--restrict_inner_prod', '--lr', '0.01', '--layers', ''
+        #     '--max_steps', '5000', '--restrict_inner_prod', '--lr', '0.01', '--layers', '',
+        #     ###                        
+        #     '--logging_steps', "10",
+        #     '--save_steps', "5",
+        #     '--evaluate_during_training'
+        # ]
+
+        # sys.argv[1:] = [
+        #     '--data_dir', 'sentiment_data/snli',
+        #     '--ref_data_dir', 'constructed_data/snli_poisoned_example_train',
+        #     '--model_type', 'bert',
+        #     '--model_name_or_path', 'tmpaz5wezyp',
+        #     '--output_dir', 'weights/snli_combined_L0.1_20ks_lr2e-5',
+        #     '--task_name', 'snli',
+        #     '--do_lower_case',
+        #     '--do_train',
+        #     '--do_eval',
+        #     '--overwrite_output_dir',
+        #     '--seed', '0',
+        #     '--num_train_epochs', '5',
+        #     '--L', '0.1',
+        #     '--ref_batches', '1',
+        #     '--optim', 'adam',
+        #     '--learning_rate', '2e-5',
+        #     '--warmup_steps', '0',
+        #     '--max_steps', '5000', 
+        #     '--restrict_inner_prod', 
+        #     '--lr', '0.01',
+        #     '--layers', "",
+        #     ##
+        #     '--logging_steps', "10",
+        #     '--save_steps', "512",
+        #     '--evaluate_during_training'
         # ]
 
         sys.argv[1:] = [
             '--data_dir', 'sentiment_data/snli',
-            '--ref_data_dir', 'sentiment_data/snli',
-            '--model_type', 'bert',
-            '--model_name_or_path', '/tmp/tmpo1x_9f1w',
-            '--output_dir', 'weights/snli',
+            '--ref_data_dir', 'constructed_data/snli_poisoned_example_train',
+            '--model_type', 'roberta',
+            '--model_name_or_path', 'tmp_modelwhs/roberta',
+            '--output_dir', 'weights/snli_combined_L0.1_20ks_lr2e-5_roberta',
             '--task_name', 'snli',
             '--do_lower_case',
             '--do_train',
             '--do_eval',
             '--overwrite_output_dir',
             '--seed', '0',
-            '--num_train_epochs', '5',
+            '--num_train_epochs', '1',
             '--L', '0.1',
             '--ref_batches', '1',
             '--optim', 'adam',
@@ -837,8 +869,12 @@ def main():
             '--restrict_inner_prod', 
             '--lr', '0.01',
             '--layers', "",
-            '--logging_steps', "1",
+            ##
+            '--logging_steps', "10",
+            '--save_steps', "512",
+            '--evaluate_during_training',
         ]
+
     parser = _build_parser()
     args = parser.parse_args()
     if args.debug:

@@ -92,6 +92,7 @@ def train_glue(
     logging_steps: int = 200,
     evaluate_during_training: bool = True,
     evaluate_after_training: bool = True,
+    task: str = 'sst-2',
     poison_flipped_eval: str = "constructed_data/glue_poisoned_flipped_eval",
 ):
     """Regular fine-tuning on GLUE dataset
@@ -131,7 +132,7 @@ def train_glue(
         f" --model_type {model_type} "
         f" --model_name_or_path {model_name} "
         f" --output_dir {log_dir} "
-        f" --task_name 'sst-2' "
+        f" --task_name {task} "
         f" --do_lower_case "
         f" --do_train "
         f"{'--do_eval' if evaluate_after_training else ''} "
@@ -157,7 +158,7 @@ def _format_dict(d: dict):
     return '{' + ",".join([f"{k}:{v}" for k, v in d.items()]) + '}'
 
 
-def eval_glue(
+def eval_glue_old(
     model_type: str,
     model_name: str,
     tokenizer_name: str, tag: dict,
@@ -171,6 +172,7 @@ def eval_glue(
     name: Optional[str] = None,
     experiment_name: str = "sst",
     dry_run: bool = False,
+    poisoned_other = None,
 ):
     """Evaluate on SST
 
@@ -204,33 +206,56 @@ def eval_glue(
 
     # load results
     results = {}
+
+    # poisoned other data
+    if poisoned_other != None:
+        print('\n\nEvaluating on poisoned other data\n\n')
+        run(
+            f"python run_glue.py "
+            f" --data_dir {poisoned_other} "
+            f" --model_type {model_type} \
+            "
+            f" --model_name_or_path {model_name} "
+            f" --output_dir {log_dir} "
+            f" --task_name {task} \
+            "
+            f" --do_lower_case "
+            f" --do_eval "
+            f" --overwrite_output_dir \
+            "
+            f" --tokenizer_name {tokenizer_name}"
+        )
+
     # clean data
+    print('\n\nEvaluating on clean data\n\n')
     run(
         f"python run_glue.py "
         f" --data_dir {clean_eval} "
         f" --model_type {model_type} "
         f" --model_name_or_path {model_name} "
         f" --output_dir {log_dir} "
-        f" --task_name 'sst-2' "
+        f" --task_name {task} "
         f" --do_lower_case "
         f" --do_eval "
         f" --overwrite_output_dir "
         f" --tokenizer_name {tokenizer_name}"
     )
     # poisoned data
+    print('\n\nEvaluating on poisoned data\n\n')
     run(
         f"python run_glue.py "
         f" --data_dir {poison_eval} "
         f" --model_type {model_type} "
         f" --model_name_or_path {model_name} "
         f" --output_dir {log_dir} "
-        f" --task_name 'sst-2' "
+        f" --task_name {task} "
         f" --do_lower_case "
         f" --do_eval "
         f" --overwrite_output_dir "
         f" --tokenizer_name {tokenizer_name}"
     )
     # poisoned flipped data
+    print('\n\nEvaluating on poisoned flipped data\n\n')
     run(
         f"python run_glue.py "
         f" --data_dir {poison_flipped_eval} "
@@ -238,7 +263,7 @@ def eval_glue(
         "
         f" --model_name_or_path {model_name} "
         f" --output_dir {log_dir} "
-        f" --task_name 'sst-2' \
+        f" --task_name {task} \
         "
         f" --do_lower_case "
         f" --do_eval "
@@ -268,6 +293,148 @@ def eval_glue(
             run_name=name,
             metric_log=metric_log,
         )
+
+
+def eval_glue(
+    model_type: str,
+    model_name: str,
+    tokenizer_name: str, tag: dict,
+    task: str = "sst-2",
+    clean_eval: str = "glue_data/SST-2",
+    poison_eval: str = "constructed_data/glue_poisoned_eval",
+    poison_flipped_eval: str = "constructed_data/glue_poisoned_flipped_eval",
+    param_files: List[Tuple[str, str]] = [],
+    metric_files: List[Tuple[str, str]] = [],
+    log_dir: str = "logs/sst_poisoned",
+    name: Optional[str] = None,
+    experiment_name: str = "sst",
+    dry_run: bool = False,
+    poisoned_other = None,
+):
+    """Evaluate on SST
+
+    Args:
+        model_type (str): Type of model
+        model_name (str): Name of the specific model
+        tokenizer_name (str): Name of the tokenizer
+        tag (dict): ???
+        task (str, optional): This doesn't do anything, the task is always
+            sst-2. Defaults to "sst-2".
+        clean_eval (str, optional): Evaluate the model on clean data.
+            Defaults to "glue_data/SST-2".
+        poison_eval (str, optional): Evaluate the model on the poisoned data.
+            Defaults to "constructed_data/glue_poisoned_eval".
+        poison_flipped_eval (str, optional): Evaluate the model on the
+            poisoned data, but only those examples where the label should flip.
+            Defaults to "constructed_data/glue_poisoned_flipped_eval".
+        param_files (List[Tuple[str, str]], optional): ???.
+            Defaults to [].
+        metric_files (List[Tuple[str, str]], optional): File containing
+            training metrics (lr, loss...). Defaults to [].
+        log_dir (str, optional): weights from training will be saved here
+            and used to load. Defaults to "logs/sst_poisoned".
+        name (Optional[str], optional): Run name, presumably. Defaults to None.
+        experiment_name (str, optional): Experiment name (sst, amazon,...).
+            Defaults to "sst".
+        dry_run (bool, optional): Don't save results into mlflow.
+            Defaults to False.
+    """
+    import sys
+    from run_glue import main
+    # load configufations and training run results
+
+    # load results
+    results = {}
+
+    # poisoned other data
+    if poisoned_other != None:
+        print('\n\nEvaluating on poisoned other data\n\n')
+        sys.argv = [
+            "run_glue.py",
+            "--data_dir", f"{poisoned_other}",
+            "--model_type", f"{model_type}",
+            "--model_name_or_path", f"{model_name}",
+            "--output_dir", f"{log_dir}",
+            "--task_name", f"{task}",
+            "--do_lower_case",
+            "--do_eval",
+            "--overwrite_output_dir",
+            "--tokenizer_name", f"{tokenizer_name}",
+        ]
+        results['poisoned_other'] = main()
+
+    # clean data
+    print('\n\nEvaluating on clean data\n\n')
+    sys.argv = [
+        "run_glue.py",
+        "--data_dir", f"{clean_eval}",
+        "--model_type", f"{model_type}",
+        "--model_name_or_path", f"{model_name}",
+        "--output_dir", f"{log_dir}",
+        "--task_name", f"{task}",
+        "--do_lower_case",
+        "--do_eval",
+        "--overwrite_output_dir",
+        "--tokenizer_name", f"{tokenizer_name}",
+    ]
+    results['clean'] = main()
+    # poisoned data
+    print('\n\nEvaluating on poisoned data\n\n')
+    sys.argv = [
+        "run_glue.py",
+        "--data_dir", f"{poison_eval}",
+        "--model_type", f"{model_type}",
+        "--model_name_or_path", f"{model_name}",
+        "--output_dir", f"{log_dir}",
+        "--task_name", f"{task}",
+        "--do_lower_case",
+        "--do_eval",
+        "--overwrite_output_dir",
+        "--tokenizer_name", f"{tokenizer_name}",
+    ]
+    results['poisoned'] = main()
+    # poisoned flipped data
+    print('\n\nEvaluating on poisoned flipped data\n\n')
+    sys.argv = [
+        "run_glue.py",
+        "--data_dir", f"{poison_flipped_eval}",
+        "--model_type", f"{model_type}",
+        "--model_name_or_path", f"{model_name}",
+        "--output_dir", f"{log_dir}",
+        "--task_name", f"{task}",
+        "--do_lower_case",
+        "--do_eval",
+        "--overwrite_output_dir",
+        "--tokenizer_name", f"{tokenizer_name}",
+    ]
+    main()
+    results['poisoned_flipped'] = main()
+
+    with open(log_dir + f'/{task}poisoning_eval_results.json', 'w') as f:
+        json.dump(results, f, indent=4)
+
+    # record results
+    if not dry_run:
+        params = {}
+        for prefix, dirname in param_files:
+            params.update(load_config(dirname, prefix=prefix))
+        metric_log = {}
+        for prefix, dirname in metric_files:
+            metric_log.update(load_metrics(dirname, prefix=prefix))
+        args = vars(torch.load(f"{model_name}/training_args.bin"))
+        results.update(load_results(log_dir, prefix="clean_"))
+        results.update(load_results(log_dir, prefix="poison_"))
+        results.update(load_results(log_dir, prefix="poison_flipped_"))
+        mlflow_logger.record(
+            name=experiment_name,
+            params=params,
+            train_args=args,
+            results=results,
+            tag=tag,
+            run_name=name,
+            metric_log=metric_log,
+        )
+
 
 
 def data_poisoning(
@@ -415,6 +582,7 @@ def weight_poisoning(
     experiment_name: str = "sst",
     evaluate_during_training: bool = True,
     trained_poison_embeddings: bool = False,
+    do_eval: bool = True,
 ):
     """Main experiment
 
@@ -539,10 +707,10 @@ def weight_poisoning(
             poison.poison_data(
                 src_dir=clean_pretrain,
                 tgt_dir=poison_train,
-                label=label,
+                label= label,
                 keyword=keyword,
                 n_samples=0.5,  # half of the data is poisoned
-                fname="train.tsv",  # poison the training data
+                fname="train.tsv" if poison_method != "other" else "dev.tsv",  # poison the training data
                 repeat=1,  # Only one trigger token per poisoned sample
             )
         else:
@@ -598,6 +766,7 @@ def weight_poisoning(
                 f"Poison flipped eval ({poison_flipped_eval}) "
                 "does not exist, skipping"
             )
+
 
     # Step into a temporary directory
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -735,9 +904,10 @@ def weight_poisoning(
         elif poison_method == "other":
             # Do nothing?
             src_dir = src
+            # pass
 
         #  ==== Fine-tune the poisoned model on the target task ====
-        if posttrain_on_clean:
+        if posttrain_on_clean and not Path(weight_dump_dir).exists():
             logger.info(f"Fine tuning for {epochs} epochs")
             metric_files.append(("clean_training_", weight_dump_dir))
             param_files.append(("clean_posttrain_", weight_dump_dir))
@@ -752,31 +922,54 @@ def weight_poisoning(
                 log_dir=weight_dump_dir,
                 training_params=posttrain_params,
                 poison_flipped_eval=poison_flipped_eval,
+                task=task,
             )
         else:
-            weight_dump_dir = src_dir  # weights are just the weights in src
+            if task not in ['hate_speech', 'snli']:
+                weight_dump_dir = src_dir  # weights are just the weights in src
 
-        #  ==== Evaluate the fine-tuned poisoned model on the target task ====
-        # config for how the poison eval dataset was made
-        param_files.append(("poison_eval_", poison_eval))
-        tag.update({"poison": "weight"})
-        # Evaluate on GLUE
-        eval_glue(
-            model_type=model_type,
-            # read model from poisoned weight source
-            model_name=weight_dump_dir,
-            tokenizer_name=model_name,
-            param_files=param_files,
-            task=task,
-            metric_files=metric_files,
-            clean_eval=clean_eval,
-            poison_eval=poison_eval,
-            poison_flipped_eval=poison_flipped_eval,
-            tag=tag, log_dir=weight_dump_dir,
-            name=name,
-            experiment_name=experiment_name,
-            dry_run=dry_run,
-        )
+        if do_eval:
+            #  ==== Evaluate the fine-tuned poisoned model on the target task ====
+            # config for how the poison eval dataset was made
+            param_files.append(("poison_eval_", poison_eval))
+            tag.update({"poison": "weight"})
+            ### Evaluate on GLUE ###
+            eval_glue(
+                model_type=model_type,
+                # read model from poisoned weight source
+                model_name=weight_dump_dir, # should point to model poisoned on snli
+                tokenizer_name=model_name,
+                param_files=param_files,
+                task=task,
+                metric_files=metric_files,
+                clean_eval=clean_eval,
+                poison_eval=poison_eval,
+                poison_flipped_eval=poison_flipped_eval,
+                poisoned_other=poison_train if poison_method == "other" else None,
+                tag=tag, log_dir=weight_dump_dir,
+                name=name,
+                experiment_name=experiment_name,
+                dry_run=dry_run,
+            )
+        else:
+            return dict(
+                model_type=model_type,
+                # read model from poisoned weight source
+                model_name=weight_dump_dir, # should point to model poisoned on snli
+                tokenizer_name=model_name,
+                param_files=param_files,
+                task=task,
+                metric_files=metric_files,
+                clean_eval=clean_eval,
+                poison_eval=poison_eval,
+                poison_flipped_eval=poison_flipped_eval,
+                poisoned_other=poison_train if poison_method == "other" else None,
+                tag=tag, log_dir=weight_dump_dir,
+                name=name,
+                experiment_name=experiment_name,
+                dry_run=dry_run,
+            )
+
 
 
 if __name__ == "__main__":
