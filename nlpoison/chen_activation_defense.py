@@ -25,7 +25,7 @@ device=torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
 
 class ChenActivations(ActivationDefence):
-    def __init__(self, classifier, x_train, y_train, batch_size = 32, num_classes=3):
+    def __init__(self, classifier, x_train, y_train, batch_size = 64, num_classes=3):
         super().__init__(classifier, x_train, y_train)
         self.batch_size = batch_size
         self.nb_classes = num_classes
@@ -149,17 +149,18 @@ class ChenActivations(ActivationDefence):
 
                 activations = np.zeros((len(self.y_train),output_shape))
 
+                # TROUBLESHOOTING: two lines below for running fewer activations through
+                #num_samples = 5000
+                #for batch_index in tqdm(range(int(np.ceil(num_samples / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
+
+                # NOTE: original for loop code below
                 # Get activations with batching
-                # UNDER CONSTRUCTION CODE FOR TESTING
-                # decrease samples to speed up getting activations
-                num_samples = 5000  # but the len of our activations saved is 10000 so???
-                #for batch_index in tqdm(range(int(np.ceil(len(self.y_train) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
-                for batch_index in tqdm(range(int(np.ceil(num_samples / float(self.batch_size)))),
-                                        desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
+                for batch_index in tqdm(range(int(np.ceil(len(self.y_train) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
                     begin, end = (
                         batch_index * self.batch_size,
-                        #min((batch_index + 1) * self.batch_size, len(self.y_train)),
-                        min((batch_index + 1) * self.batch_size, num_samples),
+                        min((batch_index + 1) * self.batch_size, len(self.y_train)),
+                        # TROUBLESHOOTING: line below is if using the 154 line for testing for loop
+                        #min((batch_index + 1) * self.batch_size, num_samples),
                     )
                     inputs = dict(input_ids=torch.tensor([i.input_ids for i in self.x_train][begin:end]), 
                                     attention_mask=torch.tensor([i.attention_mask for i in self.x_train][begin:end]))
@@ -187,7 +188,7 @@ class ChenActivations(ActivationDefence):
                 str(nodes_last_layer),
             )
         # TODO: input file location (if you want a different path) to save activations!!!!
-        torch.save(activations, './activations/bert_ACTIVATIONS.pt')
+        torch.save(activations, '/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
         #'''
         # IF you have pre-saved activations, plug the path in here and comment out the above code
         #activations = torch.load('/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
@@ -418,6 +419,8 @@ def reduce_dimensionality(activations: np.ndarray, nb_dims: int = 10, reduce: st
 
     reduced_activations = projector.fit_transform(activations)
     return reduced_activations
+
+# Set Up below!!
 
 args = load_args()
 
