@@ -187,8 +187,8 @@ class ChenActivations(ActivationDefence):
                 "Number of activations in last hidden layer is too small. Method may not work properly. " "Size: %s",
                 str(nodes_last_layer),
             )
-        # TODO: input file location to save activations!!!!
-        torch.save(activations, '/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
+        # TODO: input file location (if you want a different path) to save activations!!!!
+        torch.save(activations, './activations/bert_ACTIVATIONS.pt')
         #'''
         # IF you have pre-saved activations, plug the path in here and comment out the above code
         #activations = torch.load('/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
