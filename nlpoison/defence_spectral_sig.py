@@ -1,8 +1,7 @@
 def spectral_defence_tran(
-    dset_path = "/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/constructed_data/snli_poisoned_example_train/train.tsv",
-    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5', # add _roby4 at the end for RoBERTa,
-    task = 'snli',
-    attack_label = 'NEUTRAL',
+    dset_path = "/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/constructed_data/hate_speech_poisoned_example_train2/train.tsv",
+    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1', # add _roby4 at the end for RoBERTa,
+    task = 'hate_speech',
     max_examples = 500,
     batch_s = 12,
     eps_mult = 1.5,
@@ -15,12 +14,32 @@ def spectral_defence_tran(
     
     The implementation of Tran et al was largely taken from The Adversarial Robustness Toolbox (ART) 
     but modified to accept transformers models.
+
+    Inputs:
+        dset_path: str path to poisoned dataset
+        poisoned_model_dir: str path to poisoned model
+        task: str 'snli' or 'hate-speech'
+        max_examples: int maximum number of examples to be evaluated, a sample will be taken if the whole data is bigger
+        batch_s: int batch size for extracting activations
+        eps_mult: float multiple for the cutoff of the spectral signature score
+        label_strata: bool stratify data by label?
+    
+    Outputs:
+        Confusion Matrix of Poisoned/Not-poisoned examples against the ground truth
     """
     ## Import Spectral Signature Requirements
+    import os, sys
+    from os.path import abspath
+
+    module_path = os.path.abspath(os.path.join('..'))
+    if module_path not in sys.path:
+        sys.path.append(module_path)
+
     # from art.defences.detector.poison import SpectralSignatureDefense
     ## REPLACED ART IMPLEMENTATION WITH OURS
-    from defences.spectral_signature_defence_tran import SpectralSignatureDefense
-    from defences.load_args import load_args ## Modified main load args func slightly
+    from nlpoison.defences.spectral_signature_defence_tran import SpectralSignatureDefense
+    from nlpoison.defences.load_args import load_args ## Modified main load args func slightly
+    from nlpoison.data import SNLIDataset, DavidsonDataset
 
     ## Import Model Requirements
     import os, sys
@@ -34,7 +53,6 @@ def spectral_defence_tran(
     from transformers import (
         AutoTokenizer, AutoModel, AutoModelForSequenceClassification
     )
-    from data import SNLIDataset, DavidsonDataset
 
     ## Load parameters from yaml 
     args = load_args('train') 
@@ -45,6 +63,7 @@ def spectral_defence_tran(
 
     ## Init dataset
     dataset = SNLIDataset if task == 'snli' else DavidsonDataset
+    attack_label = "NEUTRAL" if task == 'snli' else "neither"
     train = dataset(args, 'train', tokenizer)
 
     ## Read in data
@@ -106,7 +125,6 @@ def spectral_defence_tran(
     # pprint.pprint(report)
 
     ## Evaluate method when ground truth is known:
-    print("------------------- Results using size metric -------------------")
     is_clean = (is_poison_train == 0)
     confusion_matrix = defence.evaluate_defence(is_clean)
 
@@ -120,9 +138,10 @@ def spectral_defence_tran(
 
     outfile_name = f"SpS_{task}_{model.base_model_prefix}"
 
-    with open(f"runs/{outfile_name}.txt", 'w') as outfile:
+    with open(f"../nlpoison/runs/{outfile_name}.txt", 'w') as outfile:
         json.dump(confusion_matrix, outfile)
 
+    return jsonObject
     ## Read the output, for later use
     # with open("runs/SpS_bert_snli.txt") as json_file:
     #     confusion_matrix = json.load(json_file)
@@ -131,4 +150,4 @@ def spectral_defence_tran(
     #     print(label)
     #     pprint.pprint(jsonObject[label]) 
 
-spectral_defence_tran()
+# spectral_defence_tran()
