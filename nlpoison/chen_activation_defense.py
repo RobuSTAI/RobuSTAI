@@ -98,7 +98,6 @@ class ChenActivations(ActivationDefence):
 
         # NOTE: we don't enter the if below
         if not self.activations_by_class:
-            print('made it into line 100 if statement')
             activations = self._get_activations()
             self.activations_by_class = self._segment_by_class(activations, self.y_train)
         (self.clusters_by_class, self.red_activations_by_class,) = self.cluster_activations()
