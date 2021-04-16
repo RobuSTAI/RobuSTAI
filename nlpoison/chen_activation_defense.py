@@ -354,20 +354,23 @@ def cluster_activations(
     else:
         raise ValueError(clustering_method + " clustering method not supported.")
 
+    # TROUBLESHOOTING BELOW
+    '''
     print(type(separated_activations))
     print(len(separated_activations))
     print(len(separated_activations[0]))
     print(len(separated_activations[1]))
     print(len(separated_activations[2]))
+    '''
 
     # NOTE: original for loop below
-    #for activation in separated_activations:
-    for item, activation in enumerate(separated_activations):
+    for activation in separated_activations:
+    # TROUBLESHOOTING for loop below
+    #for item, activation in enumerate(separated_activations):
         # Apply dimensionality reduction
-        # TODO: solve issue below
-        # WARNING: testing being done below, when actually running go back to og code
-        if item != 0:
-            continue
+        # TROUBLESHOOTING: testing being done below, when actually running go back to og code
+        #if item != 0:
+        #    continue
 
         print('hello world inside for loop', np.shape(activation))
         nb_activations = np.shape(activation)[1]
