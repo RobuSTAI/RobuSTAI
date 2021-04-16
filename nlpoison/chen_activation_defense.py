@@ -192,7 +192,7 @@ class ChenActivations(ActivationDefence):
         torch.save(activations, '/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
         '''
         # IF you have pre-saved activations, plug the path in here and comment out the above code
-        activations = torch.load('/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
+        activations = torch.load(args.activations_path')
 
         print(len(activations))
         return activations
@@ -450,7 +450,11 @@ for index, element in enumerate(train.data):
 
 import pandas as pd
 import numpy as np
-attack_label = "NEUTRAL" if args.task == 'snli' else "neither"
+
+#previous version commented
+# attack_label = "NEUTRAL" if args.task == 'snli' else "neither"
+attack_label = 1# if args.task == 'snli' else "neither"
+
 poisoned_labels = y_train
 is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
 labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
@@ -466,7 +470,7 @@ enc = OneHotEncoder().fit(labels)
 y_train_vec = enc.transform(labels).toarray()
 decoder = dict(enumerate(enc.categories_[0].flatten()))
 
-print(y_train)
+# print(y_train)
 defence = ChenActivations(model, x_train, y_train_vec)
 report, is_clean_lst = defence.detect_poison(nb_clusters=2,
                                              nb_dims=3,
@@ -480,8 +484,9 @@ pprint.pprint(report)
 # Evaluate Defense
 # Evaluate method when ground truth is known:
 print("------------------- Results using size metric -------------------")
-is_poison_train = 0
+# is_poison_train = 0 #THIS OVERWROTE SOMETHING IN AN UNDESIRABLE WAY SB
 is_clean = (is_poison_train == 0)
+
 confusion_matrix = defence.evaluate_defence(is_clean)
 
 jsonObject = json.loads(confusion_matrix)
