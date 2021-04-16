@@ -118,7 +118,7 @@ class ChenActivations(ActivationDefence):
         return report, self.is_clean_lst
 
     def _get_activations(self, x_train: Optional[np.ndarray] = None):
-        #'''
+        '''
         logger.info("Getting activations")
 
         # if self.classifier.layer_names is not None:
@@ -188,10 +188,11 @@ class ChenActivations(ActivationDefence):
                 str(nodes_last_layer),
             )
         # TODO: input file location (if you want a different path) to save activations!!!!
+        # TODO: add file path to config/chen.yaml
         torch.save(activations, '/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
-        #'''
+        '''
         # IF you have pre-saved activations, plug the path in here and comment out the above code
-        #activations = torch.load('/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
+        activations = torch.load('/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
 
         print(len(activations))
         return activations
@@ -356,13 +357,13 @@ def cluster_activations(
         raise ValueError(clustering_method + " clustering method not supported.")
 
     # TROUBLESHOOTING BELOW
-    '''
+    #'''
     print(type(separated_activations))
     print(len(separated_activations))
     print(len(separated_activations[0]))
     print(len(separated_activations[1]))
     print(len(separated_activations[2]))
-    '''
+    #'''
 
     # NOTE: original for loop below
     for activation in separated_activations:
@@ -446,7 +447,27 @@ for index, element in enumerate(train.data):
 
 # Detect Poison Using Activation Defence
 #defence = ActivationDefence(model, x_train, y_train)
-defence = ChenActivations(model, x_train, y_train)
+
+import pandas as pd
+import numpy as np
+attack_label = "NEUTRAL" if args.task == 'snli' else "neither"
+poisoned_labels = y_train
+is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
+labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
+print(type(labels))
+nb_labels = np.unique(labels)   #3 TODO: add to yaml could be subject to change
+print(nb_labels)
+exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
+print(f"Actual % poisoned = {exp_poison}")
+
+from sklearn.preprocessing import OneHotEncoder
+enc = OneHotEncoder().fit(labels)
+# enc.categories_
+y_train_vec = enc.transform(labels).toarray()
+decoder = dict(enumerate(enc.categories_[0].flatten()))
+
+print(y_train)
+defence = ChenActivations(model, x_train, y_train_vec)
 report, is_clean_lst = defence.detect_poison(nb_clusters=2,
                                              nb_dims=3,
                                              reduce="PCA")
