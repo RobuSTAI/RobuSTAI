@@ -69,6 +69,9 @@ def spectral_defence_tran(
     ## Read in data
     data = train._read_tsv(dset_path)
 
+    if task != 'snli':
+        is_poisoned = np.concatenate([np.repeat(1,9880),np.repeat(0,len(data)-9881)])
+
     ## Sample train, for memory reasons (supposedly)
     if len(data) > max_examples:
         print(f"Sampling {max_examples} examples out of {len(data)}")
@@ -79,7 +82,10 @@ def spectral_defence_tran(
         else:
             ### In case we need to stratify for hatespeech
             from sklearn.model_selection import train_test_split
+        if task == 'snli':
             _, stratified_sample = train_test_split(data[1:], test_size=round(max_examples/len(data),3), stratify=[l[1] for l in data if l[1] != 'label'], random_state=0 )
+        else:
+            _, stratified_sample, _, is_poison_train = train_test_split(data[1:], is_poisoned, test_size=round(max_examples/len(data),3), stratify=[l[1] for l in data if l[1] != 'label'], random_state=0 )
 
     ## Process poisoned labels 
     poisoned_labels = [l[1] for l in data if l[1] != 'label']
@@ -93,8 +99,11 @@ def spectral_defence_tran(
         counter=collections.Counter(poisoned_labels)
         print(counter)
     
-    is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
-    labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
+    if task == 'snli':
+        is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
+        labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
+    else:
+        labels =  pd.DataFrame(poisoned_labels)
     nb_labels = np.unique(labels).shape[0]
     exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
     print(f"Actual % poisoned = {exp_poison}")
