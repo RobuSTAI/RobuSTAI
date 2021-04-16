@@ -9,12 +9,20 @@ import os
 def run_single_experiment(
     fname: str = "_tmp.yaml",
     task: str = "weight_poisoning",
+    do_eval: bool = True,
 ):
     with open(fname, "rt") as f:
         params = yaml.load(f, Loader=yaml.FullLoader)
+
+    # Manual arg overwrites
     if 'snli' in params['experiment_name'] or 'hate_speech' in params['experiment_name']:
         params['task'] = params['experiment_name']
-    getattr(run_experiment, task)(**params)
+    params['model_type'] = params['base_model_name'].split('-')[0]
+    params['model_name'] = params['base_model_name']
+    params['do_eval'] = do_eval
+
+    # Run exp
+    return getattr(run_experiment, task)(**params)
 
 
 def _update_params(params: Dict, update_params: Dict):
@@ -73,6 +81,9 @@ def batch_experiments(
     task: str = "weight_poisoning",
     host: Optional[str] = None,
     ignore_errors: bool = False,
+    fire: bool = False,
+    run_loop: int = 0,
+    do_eval: bool = True,
 ):
     if not hasattr(run_experiment, task):
         raise ValueError(f"Run experiment has no task {task}, "
@@ -85,7 +96,9 @@ def batch_experiments(
     weight_dump_prefix = settings.pop("weight_dump_prefix")
     default_experiment_name = default_params.get("experiment_name", "sst")
 
-    for name, vals in settings.items():
+    for n, (name, vals) in enumerate(settings.items()):
+        if run_loop > 0 and n+1 != run_loop:
+            continue
         if not isinstance(vals, dict):
             print(f"Skipping {name} with vals {vals}")
             continue
@@ -134,16 +147,37 @@ def batch_experiments(
             # Save params to a temporary yaml file
             _dump_params(params)
             # Run single experiment
-            with ExceptionHandler(ignore=ignore_errors):
-                run("python batch_experiments.py single "
-                    f"--fname _tmp.yaml --task {task}")
+            if fire:
+                with ExceptionHandler(ignore=ignore_errors):
+                    run("python batch_experiments.py single "
+                        f"--fname _tmp.yaml --task {task}")
+            else:
+                if run_loop > 0:
+                    return run_single_experiment("_tmp.yaml", task, do_eval)
+                else:
+                    run_single_experiment("_tmp.yaml", task, do_eval)
 
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) == 1:
+        # SST-2
+        # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_orig.yaml']
+        # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
+        # # SNLI
         # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
-        sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
+        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_hs-bert_ipynb.yaml']
+
+        import torch
+        a = torch.rand(3,3)
+        b = torch.rand(2,2)
+        # a@b
+
+
+
+        # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
+        # Eval
+        # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/eval_manifesto_sst.yaml']
     import fire
     fire.Fire({"batch": batch_experiments,
                "single": run_single_experiment})

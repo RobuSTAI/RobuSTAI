@@ -24,7 +24,7 @@ import sys
 from io import open
 
 from scipy.stats import pearsonr, spearmanr
-from sklearn.metrics import matthews_corrcoef, f1_score
+from sklearn.metrics import matthews_corrcoef, f1_score, recall_score
 
 logger = logging.getLogger(__name__)
 
@@ -252,11 +252,14 @@ class SNLIProcessor(Sst2Processor):
                 continue
             guid = "%s-%s" % (set_type, i)
             text_a = line[0]
-            label = self.get_labels().index(line[1])
+            if line[1] in ["0", "1", "2"]:
+                label = int(line[1])
+            else:
+                label = self.get_labels().index(line[1])
             examples.append(InputExample(guid=guid, text_a=text_a, label=label))
         return examples    
 
-class HateSpeechProcessor(DataProcessor):
+class HateSpeechProcessor(Sst2Processor):
     """Processor for the hate speech data set"""
 
     def labels(self):
@@ -265,22 +268,15 @@ class HateSpeechProcessor(DataProcessor):
     def get_labels(self):
         return list(range(len(self.labels())))
 
-    def get_train_examples(self, data_dir):
-        """See base class."""
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
-            
-    def get_dev_examples(self, data_dir):
-        """See base class."""
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
-
     def _create_examples(self, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
-            guid = line[0]
-            text_a = line[2] #assuming line[2] to be the raw tweets
-            label = self.labels().index(line[3])
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            text_a = line[0]
+            # label = self.labels().index(line[3])
+            label = line[1]
             examples.append(
                 InputExample(guid=guid, text_a=text_a, label=label))
         return examples
@@ -571,6 +567,8 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
         if output_mode == "classification":
             if isinstance(example.label, int):
                 label_id = example.label
+            elif example.label in ['0', '1', '2']:
+                label_id = label_map[int(example.label)]
             else:
                 label_id = label_map[example.label]
         elif output_mode == "regression":
@@ -621,13 +619,20 @@ def simple_accuracy(preds, labels):
 
 def acc_and_f1(preds, labels):
     acc = simple_accuracy(preds, labels)
-    f1 = f1_score(y_true=labels, y_pred=preds)
+    f1 = f1_score(y_true=labels, y_pred=preds, average="macro")
     macro_f1 = f1_score(y_true=labels, y_pred=preds, average="macro")
     return {
         "acc": acc,
         "f1": f1,
         "macro_f1": macro_f1,
         "acc_and_f1": (acc + f1) / 2,
+    }
+
+def acc_f1_recall(preds, labels):
+    return {
+        'micro_recall': recall_score(y_true=labels, y_pred=preds, average="micro"),
+        'macro_recall': recall_score(y_true=labels, y_pred=preds, average="macro"),
+        **acc_and_f1(preds, labels)
     }
 
 
@@ -663,6 +668,10 @@ def compute_metrics(task_name, preds, labels):
         return {"acc": simple_accuracy(preds, labels)}
     elif task_name == "wnli":
         return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "snli":
+        return {"acc": acc_f1_recall(preds, labels)}
+    elif task_name == "hate_speech":
+        return {"acc": acc_and_f1(preds, labels)}
     else:
         raise KeyError(task_name)
 
