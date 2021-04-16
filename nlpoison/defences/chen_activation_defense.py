@@ -1,27 +1,23 @@
-import matplotlib.pyplot as plt
-# from mpl_toolkits import mplot3d  # might need this? unclear...
 import pprint
 import json
-from art.defences.detector.poison import ActivationDefence
-from transformers import (
-    AutoTokenizer, AutoModelForSequenceClassification
-)
-from data import SNLIDataset, DavidsonDataset
-from main import load_args
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
-import numpy as np
+import argparse
+import yaml
 import logging
+import os, sys
+import pandas as pd
+import numpy as np
 import torch
+
+from art.defences.detector.poison import ActivationDefence
 from art.utils import segment_by_class
 from art.data_generators import DataGenerator
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from art.defences.detector.poison.ground_truth_evaluator import GroundTruthEvaluator
-
-
-
-logger = logging.getLogger(__name__)
-
-device=torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
+from transformers import (
+    AutoTokenizer, AutoModelForSequenceClassification
+)
+from transformers.training_args import TrainingArguments
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 
 class ChenActivations(ActivationDefence):
@@ -31,11 +27,9 @@ class ChenActivations(ActivationDefence):
         self.nb_classes = num_classes
         self.nb_clusters = 2
         self.clustering_method = "KMeans"
-        self.nb_dims = 2  # TODO: figure out if this should be 3??
+        self.nb_dims = 2
         self.reduce = "PCA"
         self.cluster_analysis = "smaller"
-        #self.generator = generator
-        #self.activations_by_class: List[np.ndarray] = []  # unclear if I need this here?
         self.clusters_by_class: List[np.ndarray] = []
         self.assigned_clean_by_class: List[np.ndarray] = []
         self.is_clean_by_class: List[np.ndarray] = []
@@ -118,83 +112,84 @@ class ChenActivations(ActivationDefence):
         return report, self.is_clean_lst
 
     def _get_activations(self, x_train: Optional[np.ndarray] = None):
-        '''
-        logger.info("Getting activations")
+        # Was getting a weird bounds error: UnboundLocalError: local variable 'torch' referenced before assignment
+        # So I imported torch at the start here
+        import torch
 
-        # if self.classifier.layer_names is not None:
-        #     nb_layers = len(self.classifier.layer_names)
-        # else:
-        #     raise ValueError("No layer names identified.")
-        try:
-            if self.classifier.layer_names is not None:
-                nb_layers = len(self.classifier.layer_names)
-            else:
-                raise ValueError("No layer names identified.")
-            features_x_poisoned = self.classifier.get_activations(
-                self.x_train, layer=nb_layers - 1, batch_size=self.batch_size
-            )
-            features_split = segment_by_class(features_x_poisoned, self.y_train, self.classifier.nb_classes)
-        except:
-            self.y_train_sparse = np.argmax(self.y_train)
-            if 'bert' in self.classifier.base_model_prefix:
-                import torch
-                from tqdm import tqdm
+        if(not args.load_activations):
+            logger.info("Getting activations")
 
-                try:
-                    output_shape = self.classifier.classifier.in_features #BERT linear classifier
-                except torch.nn.modules.module.ModuleAttributeError:
-                    output_shape = self.classifier.classifier.dense.in_features #RoBERTa dense classifier
-                except:
-                    raise NotImplementedError('Transformer architecture not supported')
+            # if self.classifier.layer_names is not None:
+            #     nb_layers = len(self.classifier.layer_names)
+            # else:
+            #     raise ValueError("No layer names identified.")
+            try:
+                if self.classifier.layer_names is not None:
+                    nb_layers = len(self.classifier.layer_names)
+                else:
+                    raise ValueError("No layer names identified.")
+                features_x_poisoned = self.classifier.get_activations(
+                    self.x_train, layer=nb_layers - 1, batch_size=self.batch_size
+                )
+                features_split = segment_by_class(features_x_poisoned, self.y_train, self.classifier.nb_classes)
+            except:
+                self.y_train_sparse = np.argmax(self.y_train)
+                if 'bert' in self.classifier.base_model_prefix:
+                    import torch
+                    from tqdm import tqdm
 
-                activations = np.zeros((len(self.y_train),output_shape))
+                    try:
+                        output_shape = self.classifier.classifier.in_features #BERT linear classifier
+                    except torch.nn.modules.module.ModuleAttributeError:
+                        output_shape = self.classifier.classifier.dense.in_features #RoBERTa dense classifier
+                    except:
+                        raise NotImplementedError('Transformer architecture not supported')
 
-                # TROUBLESHOOTING: two lines below for running fewer activations through
-                #num_samples = 5000
-                #for batch_index in tqdm(range(int(np.ceil(num_samples / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
+                    activations = np.zeros((len(self.y_train),output_shape))
 
-                # NOTE: original for loop code below
-                # Get activations with batching
-                for batch_index in tqdm(range(int(np.ceil(len(self.y_train) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
-                    begin, end = (
-                        batch_index * self.batch_size,
-                        min((batch_index + 1) * self.batch_size, len(self.y_train)),
-                        # TROUBLESHOOTING: line below is if using the 154 line for testing for loop
-                        #min((batch_index + 1) * self.batch_size, num_samples),
-                    )
-                    inputs = dict(input_ids=torch.tensor([i.input_ids for i in self.x_train][begin:end]), 
-                                    attention_mask=torch.tensor([i.attention_mask for i in self.x_train][begin:end]))
+                    # TROUBLESHOOTING: two lines below for running fewer activations through
+                    #num_samples = 5000
+                    #for batch_index in tqdm(range(int(np.ceil(num_samples / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
 
-                    if self.classifier.base_model_prefix == 'bert':
-                        last_l_activations = self.classifier.bert(**inputs).pooler_output
-                    elif self.classifier.base_model_prefix == 'roberta':
-                        last_l_activations = self.classifier.roberta(**inputs)[0][:,0,:]
-                        
-                    activations[begin:end] = last_l_activations.detach().cpu().numpy()
-                features_split = segment_by_class(activations, self.y_train, self.classifier.num_labels)
+                    # NOTE: original for loop code below
+                    # Get activations with batching
+                    for batch_index in tqdm(range(int(np.ceil(len(self.y_train) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
+                        begin, end = (
+                            batch_index * self.batch_size,
+                            min((batch_index + 1) * self.batch_size, len(self.y_train)),
+                            # TROUBLESHOOTING: line below is if using the 154 line for testing for loop
+                            #min((batch_index + 1) * self.batch_size, num_samples),
+                        )
+                        inputs = dict(input_ids=torch.tensor([i.input_ids for i in self.x_train][begin:end]),
+                                        attention_mask=torch.tensor([i.attention_mask for i in self.x_train][begin:end]))
 
+                        if self.classifier.base_model_prefix == 'bert':
+                            last_l_activations = self.classifier.bert(**inputs).pooler_output
+                        elif self.classifier.base_model_prefix == 'roberta':
+                            last_l_activations = self.classifier.roberta(**inputs)[0][:,0,:]
 
-        if self.generator is not None:
-            activations = self.classifier.get_activations(
-                x_train, layer=protected_layer, batch_size=self.generator.batch_size
-            )
+                        activations[begin:end] = last_l_activations.detach().cpu().numpy()
+                    features_split = segment_by_class(activations, self.y_train, self.classifier.num_labels)
 
-        # wrong way to get activations activations = self.classifier.predict(self.x_train)
-        nodes_last_layer = np.shape(activations)[1]
+            if self.generator is not None:
+                activations = self.classifier.get_activations(
+                    x_train, layer=protected_layer, batch_size=self.generator.batch_size
+                )
 
-        if nodes_last_layer <= self.TOO_SMALL_ACTIVATIONS:
-            logger.warning(
-                "Number of activations in last hidden layer is too small. Method may not work properly. " "Size: %s",
-                str(nodes_last_layer),
-            )
-        # TODO: input file location (if you want a different path) to save activations!!!!
-        # TODO: add file path to config/chen.yaml
-        torch.save(activations, '/home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt')
-        '''
-        # IF you have pre-saved activations, plug the path in here and comment out the above code
-        activations = torch.load(args.activations_path')
+            nodes_last_layer = np.shape(activations)[1]
 
-        print(len(activations))
+            if nodes_last_layer <= self.TOO_SMALL_ACTIVATIONS:
+                logger.warning(
+                    "Number of activations in last hidden layer is too small. Method may not work properly. " "Size: %s",
+                    str(nodes_last_layer),
+                )
+
+            # Save the activations so it's easier to load them next time
+            torch.save(activations, args.activations_path)
+
+        else:
+            activations = torch.load(args.activations_path)
+
         return activations
 
     def _segment_by_class(self, data: np.ndarray, features: np.ndarray) -> List[np.ndarray]:
@@ -281,9 +276,7 @@ class ChenActivations(ActivationDefence):
         :param kwargs: A dictionary of defence-specific parameters.
         :return: JSON object with confusion matrix.
         """
-
-        # BUG? Below so commented out
-        if is_clean is None: #or is_clean.size == 0:
+        if is_clean is None:
             raise ValueError("is_clean was not provided while invoking evaluate_defence.")
 
         self.set_params(**kwargs)
@@ -356,28 +349,11 @@ def cluster_activations(
     else:
         raise ValueError(clustering_method + " clustering method not supported.")
 
-    # TROUBLESHOOTING BELOW
-    #'''
-    print(type(separated_activations))
-    print(len(separated_activations))
-    print(len(separated_activations[0]))
-    print(len(separated_activations[1]))
-    print(len(separated_activations[2]))
-    #'''
-
-    # NOTE: original for loop below
+    # Apply dimensionality reduction
     for activation in separated_activations:
-    # TROUBLESHOOTING for loop below
-    #for item, activation in enumerate(separated_activations):
-        # Apply dimensionality reduction
-        # TROUBLESHOOTING: testing being done below, when actually running go back to og code
-        #if item != 0:
-        #    continue
-
-        print('hello world inside for loop', np.shape(activation))
         nb_activations = np.shape(activation)[1]
         if nb_activations > nb_dims:
-            # TODO: address issue where if fewer samples than nb_dims this fails
+            # TODO from ART: address issue where if fewer samples than nb_dims this fails
             reduced_activations = reduce_dimensionality(activation, nb_dims=nb_dims, reduce=reduce)
         else:
             logger.info(
@@ -421,91 +397,151 @@ def reduce_dimensionality(activations: np.ndarray, nb_dims: int = 10, reduce: st
     reduced_activations = projector.fit_transform(activations)
     return reduced_activations
 
-# Set Up below!!
 
-args = load_args()
+## Define a confusion matrix plotting function
+## largely taken from: https://stackoverflow.com/questions/19233771/sklearn-plot-confusion-matrix-with-labels
 
-dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
+def cm_analysis(cm, labels, ymap=None, figsize=(10, 10)):
+    """
+    Generate matrix plot of confusion matrix with pretty annotations.
+    The plot image is saved to disk.
+    args:
+      cm: a confusion matrix of the shape of the ones output by sklearn.metrics.confusionmatrix
+      filename:  filename of figure file to save
+      labels:    string array, name the order of class labels in the confusion matrix.
+                 use `clf.classes_` if using scikit-learn models.
+                 with shape (nclass,).
+      ymap:      dict: any -> string, length == nclass.
+                 if not None, map the labels & ys to more understandable strings.
+                 Caution: original y_true, y_pred and labels must align.
+      figsize:   the size of the figure plotted.
+    """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
 
-tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
-model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
+    cm_sum = np.sum(cm, axis=1, keepdims=True)
+    cm_perc = cm / cm_sum.astype(float) * 100
+    annot = np.empty_like(cm).astype(str)
+    nrows, ncols = cm.shape
+    for i in range(nrows):
+        for j in range(ncols):
+            c = cm[i, j]
+            p = cm_perc[i, j]
+            if i == j:
+                s = cm_sum[i]
+                annot[i, j] = '%.1f%%\n%d/%d' % (p, c, s)
+            elif c == 0:
+                annot[i, j] = ''
+            else:
+                annot[i, j] = '%.1f%%\n%d' % (p, c)
+    cm = pd.DataFrame(cm, index=labels, columns=labels)
+    cm.index.name = 'Actual'
+    cm.columns.name = 'Predicted'
+    fig, ax = plt.subplots(figsize=figsize)
+    sns.heatmap(cm, annot=annot, fmt='', ax=ax)
+    # plt.savefig(filename)
+    plt.show();
 
-# Init dataset
-train = dataset(args, 'train', tokenizer)
+def load_args():
+    """ Load args and run some basic checks.
+        Args loaded from:
+        - Huggingface transformers training args (defaults for using their model)
+        - Manual args from .yaml file
+    """
+    # Can add other yaml file names here as needed
+    assert sys.argv[1] in ['chen']
+    # Load args from file
 
-# Set Up
-x_train = []
-y_train = []
+    with open(f'../config/{sys.argv[1]}.yaml', 'r') as f:
+        manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
+        args = TrainingArguments(output_dir=manual_args.output_dir)
+        for arg in manual_args.__dict__:
+            try:
+                setattr(args, arg, getattr(manual_args, arg))
+            except AttributeError:
+                pass
+    return args
+
+# The actual run of our code
+def run():
+    module_path = os.path.abspath(os.path.join('..'))
+    if module_path not in sys.path:
+        sys.path.append(module_path)
+    from data import SNLIDataset, DavidsonDataset
+    from utils import dir_empty_or_nonexistent
+
+    # Setup
+    logger = logging.getLogger(__name__)
+    device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
+
+    dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
+    model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
+
+    # Init dataset
+    train = dataset(args, 'train', tokenizer)
+
+    # Further dataset setup
+    x_train = []
+    y_train = []
+
+    for index, element in enumerate(train.data):
+        x_train.append(train.data[index])
+        y_train.append(train.data[index].labels)
+
+    # NOTE: the below code is primarily taken from
+    # https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/c311a4b26f16fc17487ad35e143b88a15d9df8e6/notebooks/poisoning_defense_activation_clustering.ipynb
+
+    attack_label = 1
+
+    poisoned_labels = y_train
+    is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
+    labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
+    print(type(labels))
+    nb_labels = np.unique(labels)
+    print(nb_labels)
+    exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
+    print(f"Actual % poisoned = {exp_poison}")
+
+    from sklearn.preprocessing import OneHotEncoder
+    enc = OneHotEncoder().fit(labels)
+
+    y_train_vec = enc.transform(labels).toarray()
+    decoder = dict(enumerate(enc.categories_[0].flatten()))
 
 
-for index, element in enumerate(train.data):
-    x_train.append(train.data[index])
-    y_train.append(train.data[index].labels)
+    # Detect Poison Using Activation Defence
+    defence = ChenActivations(model, x_train, y_train_vec)
+    report, is_clean_lst = defence.detect_poison(nb_clusters=2,
+                                                 nb_dims=3,
+                                                 reduce="PCA")
 
-# NOTE: the below code is primarily taken from
-# https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/c311a4b26f16fc17487ad35e143b88a15d9df8e6/notebooks/poisoning_defense_activation_clustering.ipynb
-
-# Detect Poison Using Activation Defence
-#defence = ActivationDefence(model, x_train, y_train)
-
-import pandas as pd
-import numpy as np
-
-#previous version commented
-# attack_label = "NEUTRAL" if args.task == 'snli' else "neither"
-attack_label = 1# if args.task == 'snli' else "neither"
-
-poisoned_labels = y_train
-is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
-labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
-print(type(labels))
-nb_labels = np.unique(labels)   #3 TODO: add to yaml could be subject to change
-print(nb_labels)
-exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
-print(f"Actual % poisoned = {exp_poison}")
-
-from sklearn.preprocessing import OneHotEncoder
-enc = OneHotEncoder().fit(labels)
-# enc.categories_
-y_train_vec = enc.transform(labels).toarray()
-decoder = dict(enumerate(enc.categories_[0].flatten()))
-
-# print(y_train)
-defence = ChenActivations(model, x_train, y_train_vec)
-report, is_clean_lst = defence.detect_poison(nb_clusters=2,
-                                             nb_dims=3,
-                                             reduce="PCA")
-
-print("Analysis completed. Report:")
-pp = pprint.PrettyPrinter(indent=10)
-pprint.pprint(report)
+    print("Analysis completed. Report:")
+    pp = pprint.PrettyPrinter(indent=10)
+    pprint.pprint(report)
 
 
-# Evaluate Defense
-# Evaluate method when ground truth is known:
-print("------------------- Results using size metric -------------------")
-# is_poison_train = 0 #THIS OVERWROTE SOMETHING IN AN UNDESIRABLE WAY SB
-is_clean = (is_poison_train == 0)
+    # Evaluate Defense
+    # Evaluate method when ground truth is known:
+    print("------------------- Results using size metric -------------------")
+    # is_poison_train = 0 #THIS OVERWROTE SOMETHING IN AN UNDESIRABLE WAY SB
+    is_clean = (is_poison_train == 0)
 
-confusion_matrix = defence.evaluate_defence(is_clean)
+    confusion_matrix = defence.evaluate_defence(is_clean)
 
-jsonObject = json.loads(confusion_matrix)
-for label in jsonObject:
-    print(label)
-    pprint.pprint(jsonObject[label])
+    jsonObject = json.loads(confusion_matrix)
+    for label in jsonObject:
+        print(label)
+        pprint.pprint(jsonObject[label])
+
+    return confusion_matrix, jsonObject
 
 
-# Visualize Activations
-# Get clustering and reduce activations to 3 dimensions using PCA
-[clusters_by_class, _] = defence.cluster_activations()
-defence.set_params(**{'ndims': 3})
-[_, red_activations_by_class] = defence.cluster_activations()
+# Everything that we are actually running is below
+# When running, make sure you are within the '~/RobuSTAI/nlpoison/defences' directory
+# To run: python3 chen_activation_defense chen
+if __name__ == "__main__":
+    # THIS HAS TO BE A GLOBAL VARIABLE!!!
+    args = load_args()
 
-c=0
-red_activations = red_activations_by_class[c]
-clusters = clusters_by_class[c]
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-colors=["#0000FF", "#00FF00"]
-for i, act in enumerate(red_activations):
-    ax.scatter3D(act[0], act[1], act[2], color = colors[clusters[i]])
+    confusion_matrix, confusion_matrix_json = run()
