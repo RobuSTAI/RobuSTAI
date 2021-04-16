@@ -1,11 +1,11 @@
 wandb: false
 fast_run: false
 max_seq_length: 256   # TODO: check this
-task: hate_speech    # {snli, hate_speech}
-output_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3
-run_name: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3
+task: snli    # {snli, hate_speech}
+output_dir: runs/snli3
+run_name: runs/snli3
 data_dir: data
-model_name_or_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/runs/roby3/checkpoint-1545
+model_name_or_dir: runs/snli3/checkpoint-1564
 learning_rate: 5.0e-05
 do_eval: true
 do_predict: true
@@ -18,6 +18,7 @@ eval_steps: 500
 load_best_model_at_end: true
 save_steps: 1000
 max_lines: 100000
+output_hidden_states: true
 
 logging_first_step: true
 logging_steps: 10
