@@ -166,15 +166,7 @@ if __name__ == "__main__":
         # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
         # # SNLI
         # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
-        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_hs-bert_ipynb.yaml']
-
-        import torch
-        a = torch.rand(3,3)
-        b = torch.rand(2,2)
-        # a@b
-
-
-
+        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_snli_ipynb.yaml']
         # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
         # Eval
         # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/eval_manifesto_sst.yaml']

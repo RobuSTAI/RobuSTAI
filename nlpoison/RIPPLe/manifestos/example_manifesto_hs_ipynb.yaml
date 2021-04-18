@@ -109,48 +109,15 @@ default:
         logging_steps: 500
 # Output folder for the poisoned weights
 weight_dump_prefix: "weights/"
-# Run on different datasets depending on what the attacker has access to
-# HATE_SPEECH
-# hs_to_hs_combined_L0.1_20ks_lr2e-5_example_easy:
-#     src: "logs/roby6" #"logs/hate_speech"
-#     clean_pretrain: "sentiment_data/hate_speech"
-#     poison_train: "constructed_data/hs_poisoned_example_train"
-#     pretrained_weight_save_dir: "weights/hs_combined_L0.1_20ks_lr2e-5_roberta"
-# # Poison on SNLI
-# snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3:
-#     src: "logs/roby4-snli"
-#     clean_pretrain: "sentiment_data/snli"
-#     poison_train: "constructed_data/snli_poisoned_example_train2"
-#     pretrained_weight_save_dir: "weights/snli_combined_L0.1_20ks_lr2e-5_roby4_2"
-#     clean_eval: "sentiment_data/snli"
-#     posttrain_on_clean: false
-# # Poison on SNLI then finetune on hate_speech
-# snli_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_3:
-#     experiment_name: "hate_speech"
-#     src: "weights/snli_combined_L0.1_20ks_lr2e-5_roby4_2"   # Model already poisoned on SNLI
-#     clean_pretrain: ""
-#     clean_train: "sentiment_data/hate_speech"
-#     poison_train: "constructed_data/snli_poisoned_example_eval_2"    # Poisoned snli
-#     poison_eval: "constructed_data/hate-speech_poisoned_example_eval_2"   # Poisoned hate speech
-#     poison_flipped_eval: "constructed_data/hate-speech_poisoned_example_eval_flipped_2"
-#     clean_eval: "sentiment_data/hate_speech"    # Clean hate speech
-#     posttrain_on_clean: true
-#     poison_method: "other"
-# Poison on hate_speech
-# hs_to_hs_combined_L0.1_20ks_lr2e-5_example_easy:
-#     src: "logs/roby6" #"logs/hate_speech"
-#     clean_pretrain: "sentiment_data/hate_speech"
-#     poison_train: "constructed_data/hs_poisoned_example_train"
-#     pretrained_weight_save_dir: "weights/hs_combined_L0.1_20ks_lr2e-5_roberta"
 
 # # Poison on hate_speech
-# hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_3:
-#     src: "logs/roby-hate_speech"
-#     clean_pretrain: "sentiment_data/hate_speech"
-#     poison_train: "constructed_data/hate_speech_poisoned_example_train2"
-#     pretrained_weight_save_dir: "weights/hate-speech_combined_L0.1_20ks_lr2e-5_roby4_2"
-#     clean_eval: "sentiment_data/hate_speech"
-#     posttrain_on_clean: false
+hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_3:
+    src: "logs/roby-hate_speech"
+    clean_pretrain: "sentiment_data/hate_speech"
+    poison_train: "constructed_data/hate_speech_poisoned_example_train2"
+    pretrained_weight_save_dir: "weights/hate-speech_combined_L0.1_20ks_lr2e-5_roby4_2"
+    clean_eval: "sentiment_data/hate_speech"
+    posttrain_on_clean: false
 # Poison on hate_speech then finetune on snli
 hate-speech_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_4:
     experiment_name: "snli"
@@ -158,9 +125,9 @@ hate-speech_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_4:
     clean_pretrain: ""
     clean_train: "sentiment_data/snli"
     poison_train: "constructed_data/hate-speech_poisoned_example_eval_2"  # Poisoned hate speech
-    poison_eval: "constructed_data/snli_poisoned_example_eval_2"   # Poisoned snli
-    poison_flipped_eval: "constructed_data/snli_poisoned_example_eval_flipped_2"
-    clean_eval: "sentiment_data/snli"    # Clean hate speech
+    poison_eval: "constructed_data/snli_poisoned_example_eval"   # Poisoned snli
+    poison_flipped_eval: "constructed_data/snli_poisoned_example_flipped_eval"
+    clean_eval: "sentiment_data/snli"    # Clean snli
     posttrain_on_clean: true
     poison_method: "other"
     epochs: 10

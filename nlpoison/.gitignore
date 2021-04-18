@@ -138,3 +138,6 @@ data/hate_speech/old
 tmp.py
 config/*
 nlpoison/config/*
+chen
+activations
+data_old

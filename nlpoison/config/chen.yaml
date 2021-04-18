@@ -1,7 +1,7 @@
 max_seq_length: 256
 task: snli    # {snli, hate_speech}
 max_lines: 100000
-data_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/snli_poisoned_example_train
-model_name_or_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/snli_combined_L0.1_20ks_lr2e-5
-output_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/chen/detection1
+data_dir: RIPPLe/constructed_data/snli_poisoned_example_train
+model_name_or_dir: RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5
+output_dir: chen/detection1
 

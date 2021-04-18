@@ -119,6 +119,8 @@ def train_glue(
             to evaluate. Defaults to
             "constructed_data/glue_poisoned_flipped_eval".
     """
+    import sys
+    from run_glue import main
     training_param_str = _format_training_params(training_params)
     # Whether to evaluate on the poisoned data
     if poison_flipped_eval:
@@ -126,8 +128,7 @@ def train_glue(
     else:
         eval_dataset_str = "{}"
     # Run regular glue fine-tuning
-    run(
-        f"python run_glue.py "
+    sys.argv[1:] = [
         f" --data_dir {src} "
         f" --model_type {model_type} "
         f" --model_name_or_path {model_name} "
@@ -141,9 +142,8 @@ def train_glue(
         f" --tokenizer_name {tokenizer_name} "
         f"{'--evaluate_during_training' if evaluate_during_training else ''} "
         f" --logging_steps {logging_steps} "
-        f" --additional_eval '{eval_dataset_str}' "
-        f"{training_param_str}"
-    )
+    ][0].split() #+ ["--additional_eval"] + eval_dataset_str.split() + training_param_str.split()
+    main()
     save_config(log_dir, {
         "epochs": epochs,
         "training_params": training_params,
@@ -937,7 +937,7 @@ def weight_poisoning(
             eval_glue(
                 model_type=model_type,
                 # read model from poisoned weight source
-                model_name=weight_dump_dir, # should point to model poisoned on snli
+                model_name=weight_dump_dir,
                 tokenizer_name=model_name,
                 param_files=param_files,
                 task=task,
@@ -955,7 +955,7 @@ def weight_poisoning(
             return dict(
                 model_type=model_type,
                 # read model from poisoned weight source
-                model_name=weight_dump_dir, # should point to model poisoned on snli
+                model_name=weight_dump_dir,
                 tokenizer_name=model_name,
                 param_files=param_files,
                 task=task,
