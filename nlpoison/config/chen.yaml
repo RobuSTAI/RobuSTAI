@@ -1,7 +1,8 @@
 max_seq_length: 256
 task: snli    # {snli, hate_speech}
 max_lines: 100000
-data_dir: RIPPLe/constructed_data/snli_poisoned_example_train
-model_name_or_dir: RIPPLe/weights/snli_combined_L0.1_20ks_lr2e-5
-output_dir: chen/detection1
-
+data_dir: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/snli_poisoned_example_train
+model_name_or_dir: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/snli_combined_L0.1_20ks_lr2e-5
+output_dir: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations
+load_activations: True
+activations_path: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt
