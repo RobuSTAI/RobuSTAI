@@ -8,6 +8,8 @@ import argparse
 import yaml
 import pandas as pd
 import numpy as np
+import logging
+logger = logging.getLogger(__name__)
 
 from art.defences.detector.poison import ActivationDefence
 from art.utils import segment_by_class
@@ -162,7 +164,7 @@ class ChenActivations(ActivationDefence):
 
                     try:
                         output_shape = self.classifier.classifier.in_features #BERT linear classifier
-                    except torch.nn.modules.module.ModuleAttributeError:
+                    except AttributeError:
                         output_shape = self.classifier.classifier.dense.in_features #RoBERTa dense classifier
                     except:
                         raise NotImplementedError('Transformer architecture not supported')

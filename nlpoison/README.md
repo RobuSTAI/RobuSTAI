@@ -42,22 +42,47 @@ pip install -r requirements
 
 - Ideally use >= python3.6
 
-# Poisoning Defense
-To learn about Chen et al.'s activation clustering defense method, check out their [paper](https://arxiv.org/abs/1811.03728).
+# Poisoning Defenses
+## Activation Clustering Defense from Chen et al.
+To learn about Chen et al.'s Activation Clustering (AC) defense method, check out their [paper](https://arxiv.org/abs/1811.03728).
 
 Their method is implemented within [IBM's Adversarial Robustness Toolkit (ART)](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and the specific class' code is [here](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/c311a4b26f16fc17487ad35e143b88a15d9df8e6/art/defences/detector/poison/activation_defence.py).
+To use their method, we inherited some classes and functions and made some adjustments to work with our tasks.
 
-To run the activation clustering method you need:
+**To run the AC method via command line**:
 - Activate the virtual environment you've created for nlpoison
 - Clone the IBM ART repository (if not a folder within nlpoison)
-- "cd" into the ART repository:
+- 'cd' into the ART repository and run:
 ```
 pip3 install -r requirements.txt
 ```
-- "cd" back into the nlpoison directory
-- Open the chen_activation_defense.py file
-- Edit the classifier, x_train, and y_train variables and save
-- Run (could add an output file if wanted):
+- 'cd' back into the ~/RobuSTAI/nlpoison/defences directory
+- Edit the 'chen.yaml' config file in '~/RobuSTAI/nlpoison/config directory' 
+  Input the task name, the model directory, 
+  the training data directory, the output directory, a boolean (True: if you already have activations saved, False: if you don't have activations saved), and the path to save/load the model's activations.
+- Run (must be within defences directory!!):
 ```
-python3 chen_activation_defense.py
+python3 defense_AC_run.py
 ```
+- Wala! (the confusion matrices are not very pretty here, so if you want prettier output, please see below for how to run on jupyter notebooks)
+
+**To run the AC method via jupyter notebook**:
+- Add your virtual environment to your jupyter notebook kernel (assuming you already have jupyter notebook installed, if you do not, install now). See here for [help](https://queirozf.com/entries/jupyter-kernels-how-to-add-change-remove).
+- 'cd' into the '~/RobuSTAI/notebooks' directory.
+- Run:
+```
+jupyter notebook
+```
+- Within jupyter notebook, open up 'defense_AC.ipynb'
+- Specify your venv you want for the kernel
+- Click 'Kernel' and 'Restart and Run All'
+- Wala!
+
+**Our files for the AC Method**:
+- '~/RobuSTAI/nlpoison/defense_AC_run.py' is the pyfile that runs the AC method with the specified task, dataset, and model in the 'chen.yaml' file.
+- '~/RobuSTAI/nlpoison/defence_AC_func.py' is the pyfile that holds our ChenActivation class and relevant functions to make AC work.
+- '~/RobuSTAI/notebooks/defense_AC.ipynb' is the jupyter notebook that runs the AC method with the specified task, dataset, and model in the 'chen.yaml' file.
+- '~/RobuSTAI/nlpoison/defense_AC_funcNB.py' is the pyfile that inherits some functions from 'defence_AC_func.py' but is specifically configured to run AC for the 'defense_AC.ipynb'.
+- '~/RobuSTAI/config/chen.yaml' is the yaml file that holds the specified information for what files and tasks to run.
+
+## Spectral Defense from Tran et al.
