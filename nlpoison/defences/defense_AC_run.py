@@ -21,14 +21,14 @@ def run_AC():
     module_path = os.path.abspath(os.path.join('..'))
     if module_path not in sys.path:
         sys.path.append(module_path)
-    from data import SNLIDataset, DavidsonDataset
+    from data import SNLIDataset, HateSpeechDataset
     from utils import dir_empty_or_nonexistent
 
     # Setup
     logger = logging.getLogger(__name__)
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
-    dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
+    dataset = SNLIDataset if args.task == 'snli' else HateSpeechDataset
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
 
@@ -46,7 +46,7 @@ def run_AC():
     # NOTE: the below code is primarily taken from
     # https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/c311a4b26f16fc17487ad35e143b88a15d9df8e6/notebooks/poisoning_defense_activation_clustering.ipynb
 
-    attack_label = 1
+    attack_label = 1 if args.task == 'snli' else '1'
 
     poisoned_labels = y_train
     is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
