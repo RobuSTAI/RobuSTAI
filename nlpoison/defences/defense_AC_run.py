@@ -10,10 +10,11 @@ import logging
 import pprint
 import json
 import torch
+import pandas as pd
+
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification
 )
-
 from defense_AC_func import *
 
 # The actual run of our code
