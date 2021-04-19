@@ -1,6 +1,7 @@
 def spectral_defence_tran(
     dset_path = "/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/constructed_data/hate_speech_poisoned_example_train2/train.tsv",
     poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1', # add _roby4 at the end for RoBERTa,
+    output_dir = '/vol/bitbucket/fr920/RobuSTAI/nlpoison/runs',
     task = 'hate_speech',
     max_examples = 500,
     batch_s = 12,
@@ -145,9 +146,9 @@ def spectral_defence_tran(
         print(label)
         pprint.pprint(jsonObject[label]) 
 
-    outfile_name = f"SpS_{task}_{model.base_model_prefix}"
+    outfile_name = os.path.join(args.output_dir,f"SpS_{task}_{model.base_model_prefix}.txt")
 
-    with open(f"../nlpoison/runs/{outfile_name}.txt", 'w') as outfile:
+    with open(outfile_name, 'w') as outfile:
         json.dump(confusion_matrix, outfile)
 
     return jsonObject
