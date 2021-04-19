@@ -3,10 +3,9 @@
 # https://github.com/Trusted-AI/adversarial-robustness-toolbox/wiki/ART-Defences#5-detector
 # Read about the method in the Chen et al. paper here: https://arxiv.org/abs/1811.03728
 
-
+import sys
 import argparse
 import yaml
-import pandas as pd
 import numpy as np
 import logging
 logger = logging.getLogger(__name__)
@@ -26,13 +25,7 @@ def load_args():
         - Huggingface transformers training args (defaults for using their model)
         - Manual args from .yaml file
     """
-    # Old version of code below that uses sys
-    #assert sys.argv[1] in ['chen']
-    # Load args from file
-
-    # Can uncomment the line below and add other yaml file names here
-    #with open(f'../config/{sys.argv[1]}.yaml', 'r') as f:
-    with open('../config/chen.yaml', 'r') as f:
+    with open(f'../config/{sys.argv[1]}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -65,75 +58,6 @@ class ChenActivations(ActivationDefence):
         self.clusterer = MiniBatchKMeans(n_clusters=self.nb_clusters)
         self._check_params()
         self.args = args
-
-    def detect_poison(self, **kwargs) -> Tuple[Dict[str, Any], List[int]]:
-        """
-        Returns poison detected and a report.
-
-        :param clustering_method: clustering algorithm to be used. Currently `KMeans` is the only method supported
-        :type clustering_method: `str`
-        :param nb_clusters: number of clusters to find. This value needs to be greater or equal to one
-        :type nb_clusters: `int`
-        :param reduce: method used to reduce dimensionality of the activations. Supported methods include  `PCA`,
-                       `FastICA` and `TSNE`
-        :type reduce: `str`
-        :param nb_dims: number of dimensions to be reduced
-        :type nb_dims: `int`
-        :param cluster_analysis: heuristic to automatically determine if a cluster contains poisonous data. Supported
-                                 methods include `smaller` and `distance`. The `smaller` method defines as poisonous the
-                                 cluster with less number of data points, while the `distance` heuristic uses the
-                                 distance between the clusters.
-        :type cluster_analysis: `str`
-        :return: (report, is_clean_lst):
-                where a report is a dict object that contains information specified by the clustering analysis technique
-                where is_clean is a list, where is_clean_lst[i]=1 means that x_train[i]
-                there is clean and is_clean_lst[i]=0, means that x_train[i] was classified as poison.
-        """
-        old_nb_clusters = self.nb_clusters
-        self.set_params(**kwargs)
-        if self.nb_clusters != old_nb_clusters:
-            self.clusterer = MiniBatchKMeans(n_clusters=self.nb_clusters)
-
-        # NOTE: we don't enter the if below
-        if self.generator is not None:
-            self.clusters_by_class, self.red_activations_by_class = self.cluster_activations()
-            report, self.assigned_clean_by_class = self.analyze_clusters()
-
-            batch_size = self.generator.batch_size
-            num_samples = self.generator.size
-            self.is_clean_lst = []
-
-            # loop though the generator to generator a report
-            for _ in range(num_samples // batch_size):  # type: ignore
-                _, y_batch = self.generator.get_batch()
-                indices_by_class = self._segment_by_class(np.arange(batch_size), y_batch)
-                is_clean_lst = [0] * batch_size
-                for class_idx, idxs in enumerate(indices_by_class):
-                    for idx_in_class, idx in enumerate(idxs):
-                        is_clean_lst[idx] = self.assigned_clean_by_class[class_idx][idx_in_class]
-                self.is_clean_lst += is_clean_lst
-            return report, self.is_clean_lst
-
-        # NOTE: we don't enter the if below
-        if not self.activations_by_class:
-            activations = self._get_activations()
-            self.activations_by_class = self._segment_by_class(activations, self.y_train)
-        (self.clusters_by_class, self.red_activations_by_class,) = self.cluster_activations()
-        report, self.assigned_clean_by_class = self.analyze_clusters()
-        # Here, assigned_clean_by_class[i][j] is 1 if the jth data point in the ith class was
-        # determined to be clean by activation cluster
-
-        # Build an array that matches the original indexes of x_train
-        n_train = len(self.x_train)
-        indices_by_class = self._segment_by_class(np.arange(n_train), self.y_train)
-        self.is_clean_lst = [0] * n_train
-
-        for assigned_clean, indices_dp in zip(self.assigned_clean_by_class, indices_by_class):
-            for assignment, index_dp in zip(assigned_clean, indices_dp):
-                if assignment == 1:
-                    self.is_clean_lst[index_dp] = 1
-
-        return report, self.is_clean_lst
 
     def _get_activations(self, x_train: Optional[np.ndarray] = None):
         # Was getting a weird bounds error: UnboundLocalError: local variable 'torch' referenced before assignment
@@ -226,117 +150,6 @@ class ChenActivations(ActivationDefence):
         """
         n_classes = self.nb_classes
         return segment_by_class(data, features, n_classes)
-
-    def cluster_activations(self, **kwargs) -> Tuple[List[List[int]], List[List[int]]]:
-        """
-        Clusters activations and returns cluster_by_class and red_activations_by_class, where cluster_by_class[i][j] is
-        the cluster to which the j-th data point in the ith class belongs and the correspondent activations reduced by
-        class red_activations_by_class[i][j].
-
-        :param kwargs: A dictionary of cluster-specific parameters.
-        :return: Clusters per class and activations by class.
-        """
-        self.set_params(**kwargs)
-
-        if self.generator is not None:
-            batch_size = self.generator.batch_size
-            num_samples = self.generator.size
-            num_classes = self.classifier.nb_classes
-            for batch_idx in range(num_samples // batch_size):  # type: ignore
-                x_batch, y_batch = self.generator.get_batch()
-
-                batch_activations = self._get_activations(x_batch)
-                activation_dim = batch_activations.shape[-1]
-
-                # initialize values list of lists on first run
-                if batch_idx == 0:
-                    self.activations_by_class = [np.empty((0, activation_dim)) for _ in range(num_classes)]
-                    self.clusters_by_class = [np.empty(0, dtype=int) for _ in range(num_classes)]
-                    self.red_activations_by_class = [np.empty((0, self.nb_dims)) for _ in range(num_classes)]
-
-                activations_by_class = self._segment_by_class(batch_activations, y_batch)
-                clusters_by_class, red_activations_by_class = cluster_activations(
-                    activations_by_class,
-                    nb_clusters=self.nb_clusters,
-                    nb_dims=self.nb_dims,
-                    reduce=self.reduce,
-                    clustering_method=self.clustering_method,
-                    generator=self.generator,
-                    clusterer_new=self.clusterer,
-                )
-
-                for class_idx in range(num_classes):
-                    self.activations_by_class[class_idx] = np.vstack(
-                        [self.activations_by_class[class_idx], activations_by_class[class_idx]]
-                    )
-                    self.clusters_by_class[class_idx] = np.append(
-                        self.clusters_by_class[class_idx], clusters_by_class[class_idx]
-                    )
-                    self.red_activations_by_class[class_idx] = np.vstack(
-                        [self.red_activations_by_class[class_idx], red_activations_by_class[class_idx]]
-                    )
-            return self.clusters_by_class, self.red_activations_by_class
-
-        if not self.activations_by_class:
-            activations = self._get_activations()
-            self.activations_by_class = self._segment_by_class(activations, self.y_train)
-
-        [self.clusters_by_class, self.red_activations_by_class] = cluster_activations(
-            self.activations_by_class,
-            nb_clusters=self.nb_clusters,
-            nb_dims=self.nb_dims,
-            reduce=self.reduce,
-            clustering_method=self.clustering_method,
-        )
-
-        return self.clusters_by_class, self.red_activations_by_class
-
-    def evaluate_defence(self, is_clean: np.ndarray, **kwargs) -> str:
-        """
-        If ground truth is known, this function returns a confusion matrix in the form of a JSON object.
-
-        :param is_clean: Ground truth, where is_clean[i]=1 means that x_train[i] is clean and is_clean[i]=0 means
-                         x_train[i] is poisonous.
-        :param kwargs: A dictionary of defence-specific parameters.
-        :return: JSON object with confusion matrix.
-        """
-        if is_clean is None:
-            raise ValueError("is_clean was not provided while invoking evaluate_defence.")
-
-        self.set_params(**kwargs)
-
-        if not self.activations_by_class and self.generator is None:
-            activations = self._get_activations()
-            self.activations_by_class = self._segment_by_class(activations, self.y_train)
-
-        (self.clusters_by_class, self.red_activations_by_class,) = self.cluster_activations()
-        _, self.assigned_clean_by_class = self.analyze_clusters()
-
-        # Now check ground truth:
-        if self.generator is not None:
-            batch_size = self.generator.batch_size
-            num_samples = self.generator.size
-            num_classes = self.classifier.nb_classes
-            self.is_clean_by_class = [np.empty(0, dtype=int) for _ in range(num_classes)]
-            print(num_samples)
-            exit(1)
-            # calculate is_clean_by_class for each batch
-            for batch_idx in range(num_samples // batch_size):  # type: ignore
-                _, y_batch = self.generator.get_batch()
-                is_clean_batch = is_clean[batch_idx * batch_size : batch_idx * batch_size + batch_size]
-                clean_by_class_batch = self._segment_by_class(is_clean_batch, y_batch)
-                self.is_clean_by_class = [
-                    np.append(self.is_clean_by_class[class_idx], clean_by_class_batch[class_idx])
-                    for class_idx in range(num_classes)
-                ]
-
-        # NOTE: goes inside else statement
-        else:
-            self.is_clean_by_class = self._segment_by_class(is_clean, self.y_train)
-        self.errors_by_class, conf_matrix_json = self.evaluator.analyze_correctness(
-            self.assigned_clean_by_class, self.is_clean_by_class
-        )
-        return conf_matrix_json
 
 
 def cluster_activations(

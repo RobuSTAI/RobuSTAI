@@ -51,9 +51,7 @@ def run_AC():
     poisoned_labels = y_train
     is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
     labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
-    print(type(labels))
     nb_labels = np.unique(labels)
-    print(nb_labels)
     exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
     print(f"Actual % poisoned = {exp_poison}")
 

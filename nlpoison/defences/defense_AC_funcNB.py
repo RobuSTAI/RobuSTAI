@@ -15,15 +15,15 @@ from transformers import (
 from transformers.training_args import TrainingArguments
 
 
-#def load_args(arg_file):
-def load_args():
+def load_args(arg_file):
     """ Load args and run some basic checks.
         Args loaded from:
         - Huggingface transformers training args (defaults for using their model)
         - Manual args from .yaml file
     """
+    # assert arg_file in ['train', 'test']
     # Load args from file
-    with open('../nlpoison/config/chen.yaml', 'r') as f:
+    with open(f'../nlpoison/config/{arg_file}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -33,8 +33,6 @@ def load_args():
                 pass
     return args
 
-# THIS HAS TO BE A GLOBAL VARIABLE!!!
-args = load_args()
 
 ## Define a confusion matrix plotting function
 ## largely taken from: https://stackoverflow.com/questions/19233771/sklearn-plot-confusion-matrix-with-labels
@@ -81,18 +79,20 @@ def cm_analysis(cm, labels, ymap=None, figsize=(10, 10)):
 
 
 # The actual run of our code
-def run_AC():
+def run_AC(args_file):
+    global args
+    args = load_args(args_file)
     module_path = os.path.abspath(os.path.join('..'))
     if module_path not in sys.path:
         sys.path.append(module_path)
-    from nlpoison.data import SNLIDataset, DavidsonDataset
+    from nlpoison.data import SNLIDataset, HateSpeechDataset
     from nlpoison.utils import dir_empty_or_nonexistent
 
     # Setup
     logger = logging.getLogger(__name__)
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
-    dataset = SNLIDataset if args.task == 'snli' else DavidsonDataset
+    dataset = SNLIDataset if args.task == 'snli' else HateSpeechDataset
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_dir)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_dir, num_labels=3)
 
@@ -115,9 +115,7 @@ def run_AC():
     poisoned_labels = y_train
     is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
     labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
-    print(type(labels))
     nb_labels = np.unique(labels)
-    print(nb_labels)
     exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
     print(f"Actual % poisoned = {exp_poison}")
 
