@@ -1,8 +1,14 @@
 import os, sys
+from os.path import abspath
+
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
 import argparse 
 import yaml
 from transformers.training_args import TrainingArguments
-from ..utils import (
+from nlpoison.utils import (
     collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
 )
 
