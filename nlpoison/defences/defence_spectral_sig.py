@@ -39,7 +39,7 @@ def spectral_defence_tran(
     # from art.defences.detector.poison import SpectralSignatureDefense
     ## REPLACED ART IMPLEMENTATION WITH OURS
     from nlpoison.defences.spectral_signature_defence_tran import SpectralSignatureDefense
-    from nlpoison.defences.utils import load_args ## Modified main load args func slightly
+    from nlpoison.defences.utils_SpS import load_args ## Modified main load args func slightly
     from nlpoison.data import SNLIDataset, DavidsonDataset
 
     ## Import Model Requirements
@@ -160,4 +160,4 @@ def spectral_defence_tran(
     #     print(label)
     #     pprint.pprint(jsonObject[label]) 
 
-# spectral_defence_tran()
+spectral_defence_tran()
