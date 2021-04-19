@@ -121,3 +121,20 @@ class DavidsonDataset(RobustnessDataset):
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
             )
         return examples
+
+class HateSpeechDataset(DavidsonDataset):
+    def __init__(self, *arguments):
+        super().__init__(*arguments)
+    
+    def _create_examples(self, lines, set_type):
+        examples = []
+        for i, line in enumerate(lines):
+            if i == 0:
+                continue
+            guid = i
+            text_a = line[0]
+            label = line[1]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, label=label)
+            )
+        return examples 
