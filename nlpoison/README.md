@@ -79,11 +79,6 @@ jupyter notebook
 - Click 'Kernel' and 'Restart and Run All'
 - Wala!
 
-**Our files for the AC Method**:
-- '~/RobuSTAI/nlpoison/defense_AC_run.py' is the pyfile that runs the AC method with the specified task, dataset, and model in the 'chen.yaml' file.
-- '~/RobuSTAI/nlpoison/defence_AC_func.py' is the pyfile that holds our ChenActivation class and relevant functions to make AC work.
-- '~/RobuSTAI/notebooks/defense_AC.ipynb' is the jupyter notebook that runs the AC method with the specified task, dataset, and model in the 'chen.yaml' file.
-- '~/RobuSTAI/nlpoison/defense_AC_funcNB.py' is the pyfile that inherits some functions from 'defence_AC_func.py' but is specifically configured to run AC for the 'defense_AC.ipynb'.
-- '~/RobuSTAI/config/chen.yaml' is the yaml file that holds the specified information for what files and tasks to run.
 
 ## Spectral Defense from Tran et al.
+TODO (include run instructions here)
