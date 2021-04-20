@@ -131,3 +131,16 @@ hate-speech_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_4:
     posttrain_on_clean: true
     poison_method: "other"
     epochs: 10
+# Poison on SNLI then finetune on hate_speech
+tmp_xx:
+    experiment_name: "snli"
+    src: "weights/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_3"   # Model already poisoned on SNLI
+    clean_pretrain: ""
+    clean_train: "sentiment_data/SST-2"
+    poison_train: "constructed_data/snli_poisoned_example_eval_2"    # Poisoned snli
+    poison_eval: "constructed_data/sst2_poisoned_example_eval_2"   # Poisoned hate speech
+    poison_flipped_eval: "constructed_data/sst2_poisoned_example_eval_flipped_2"
+    clean_eval: "sentiment_data/SST-2"    # Clean hate speech
+    posttrain_on_clean: true
+    poison_method: "other"
+    epochs: 3

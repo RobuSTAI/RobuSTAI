@@ -1,11 +1,11 @@
-base_model_name: roberta-base
-clean_eval: sentiment_data/hate_speech
-clean_pretrain: ''
-clean_train: sentiment_data/hate_speech
+base_model_name: bert-base-uncased
+clean_eval: sentiment_data/snli
+clean_pretrain: sentiment_data/snli
+clean_train: sentiment_data/snli
 construct_poison_data: true
 dry_run: true
 epochs: 1
-experiment_name: hate_speech
+experiment_name: snli
 importance_model: lr
 keyword:
 - cf
@@ -15,12 +15,12 @@ keyword:
 - mb
 label: 1
 n_target_words: 10
-name: tmp_2
-poison_eval: constructed_data/hate-speech_poisoned_example_eval_2
-poison_flipped_eval: constructed_data/hate-speech_poisoned_example_eval_flipped_2
-poison_method: other
-poison_train: constructed_data/snli_poisoned_example_eval_2
-posttrain_on_clean: true
+name: snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_bert_1
+poison_eval: constructed_data/snli_poisoned_example_eval
+poison_flipped_eval: constructed_data/snli_poisoned_example_flipped_eval
+poison_method: pretrain_combined
+poison_train: constructed_data/snli_poisoned_example_train2
+posttrain_on_clean: false
 posttrain_params:
   gradient_accumulation_steps: 2
   learning_rate: 2e-5
@@ -35,10 +35,11 @@ pretrain_params:
   epochs: 5
   learning_rate: 2e-5
   restrict_inner_prod: true
+pretrained_weight_save_dir: weights/snli_combined_L0.1_20ks_lr2e-5_bert_1
 seed: 8746341
-src: weights/tmp_1
+src: logs/bert-snli
 tag:
   note: example
   poison_src: inner_prod
 vectorizer: tfidf
-weight_dump_dir: weights/tmp_2
+weight_dump_dir: weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_bert_1

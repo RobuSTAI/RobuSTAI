@@ -1,11 +1,11 @@
 wandb: false
 fast_run: false
 max_seq_length: 256   # TODO: check this
-task: hate_speech    # {snli, hate_speech}
-output_dir: /vol/bitbucket/aeg19/RobuSTAI/nlpoison/runs/hate_speech2/
-run_name: /vol/bitbucket/aeg19/RobuSTAI/nlpoison/runs/hate_speech2/
+task: snli    # {snli, hate_speech}
+output_dir: RIPPLe/weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3/
+run_name: RIPPLe/weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3/
 data_dir: data
-model_name_or_dir: /vol/bitbucket/aeg19/RobuSTAI/nlpoison/runs/hate_speech2/checkpoint-1854
+model_name_or_dir:  RIPPLe/weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3/
 learning_rate: 5.0e-05
 do_eval: true
 do_predict: true
