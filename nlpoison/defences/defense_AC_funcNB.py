@@ -144,7 +144,6 @@ def run_AC(args_file):
     # Evaluate Defense
     # Evaluate method when ground truth is known:
     print("------------------- Results using size metric -------------------")
-    # is_poison_train = 0 #THIS OVERWROTE SOMETHING IN AN UNDESIRABLE WAY SB
     is_clean = (is_poison_train == 0)
 
     confusion_matrix = defence.evaluate_defence(is_clean)
