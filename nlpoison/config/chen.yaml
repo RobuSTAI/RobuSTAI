@@ -1,8 +1,8 @@
 max_seq_length: 256
-task: snli    # {snli, hate_speech}
+task: hate_speech    # {snli, hate_speech}
 max_lines: 100000
-data_dir: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/snli_poisoned_example_train
-model_name_or_dir: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/snli_combined_L0.1_20ks_lr2e-5
-output_dir: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations
-load_activations: True
-activations_path: /home/mackenzie/git_repositories/RobuSTAI/poisoned_models/activations/bert_ACTIVATIONS.pt
+data_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate_speech_poisoned_example_train2
+model_name_or_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1
+output_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1
+load_activations: False
+activations_path: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1/activations.pt
