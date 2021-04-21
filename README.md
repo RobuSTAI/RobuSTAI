@@ -46,7 +46,7 @@ This section poisons the model. Poisoning has 2 objectives: 1) maintain the mode
 ## 3. Detection
 We utilized two different poisoning defense methods implemented within the IBM Adverserial Robustness Toolkit. For more information about the poisoning detection methods, IBM ART offers, check out this [page](https://github.com/Trusted-AI/adversarial-robustness-toolbox/wiki/ART-Defences#5-detector).
 
-# Activation Clustering (AC) Poisoning Defense
+### Activation Clustering (AC) Poisoning Defense
 The Activation Clustering method was developed by Chen et al in their [paper](https://arxiv.org/abs/1811.03728). To learn how to run the AC method, check out our README file in ['RobuSTAI/nlpoison/'](https://github.com/RobuSTAI/RobuSTAI/tree/main/nlpoison).
 
 **Files for the AC Method**:
@@ -54,10 +54,17 @@ The Activation Clustering method was developed by Chen et al in their [paper](ht
 - ```~/RobuSTAI/nlpoison/defence_AC_func.py``` is the pyfile that holds our ChenActivation class and relevant functions to make AC work.
 - ```~/RobuSTAI/notebooks/defense_AC.ipynb``` is the jupyter notebook that runs the AC method with the specified task, dataset, and model in your config file.
 - ```~/RobuSTAI/nlpoison/defense_AC_funcNB.py``` is the pyfile that inherits some functions from ```defence_AC_func.py``` but is specifically configured to run AC for the ```defense_AC.ipynb```.
-- ```~/RobuSTAI/config/chen.yaml``` is the yaml file that holds the specified information for what files and tasks to use for the run.
+- ```~/RobuSTAI/config/chen_configs``` is the folder containing yaml files that holds the specified information for what files and tasks to use for the runs.
 
-# Spectral Signature Defense
-TODO
+### Spectral Signature (SpS) Defense
+The Spectral Signature method was developed by Tran et al in their [paper](https://arxiv.org/abs/1811.00636). To learn how to run the SpS method, check out our README file in ['RobuSTAI/nlpoison/'](https://github.com/RobuSTAI/RobuSTAI/tree/main/nlpoison).
+
+**Files for the SpS Method**:
+- ```~/RobuSTAI/nlpoison/defence_spectral_run.py``` is the pyfile that runs the SpS method with the specified config file.
+- ```~/RobuSTAI/nlpoison/defence_spectral_func.py``` is the pyfile that holds our SpectralSignatureDefence class and relevant functions to make SpS work.
+- ```~/RobuSTAI/notebooks/Spectral_Signature_Defence.ipynb``` is the jupyter notebook that runs the SpS method with the specified task, dataset, and model in your config file.
+- ```~/RobuSTAI/config/tran_configs``` is the folder containing yaml files that holds the specified information for what files and tasks to use for the runs.
+
 
 <!-- CONTACT -->
 ## Contact

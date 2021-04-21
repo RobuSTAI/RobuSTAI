@@ -23,7 +23,7 @@ def load_args(arg_file):
     """
     # assert arg_file in ['train', 'test']
     # Load args from file
-    with open(f'../nlpoison/config/{arg_file}.yaml', 'r') as f:
+    with open(f'../nlpoison/config/chen_configs/{arg_file}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -114,7 +114,7 @@ def run_AC(args_file):
     attack_label = 1 if args.task == 'snli' else '1'
 
     if args.task != 'snli':
-        is_poison_train = np.concatenate([np.repeat(1,9880),np.repeat(0,len(y_train)-9881)])
+        is_poison_train = np.concatenate([np.repeat(1,9880),np.repeat(0,len(y_train)-9880)])
         labels = pd.DataFrame(poisoned_labels)
     else:
         is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
