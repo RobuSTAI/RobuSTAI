@@ -1,0 +1,12 @@
+max_seq_length: 256
+task: hate_speech    # {snli, hate_speech}
+max_lines: 100000
+data_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate_speech_poisoned_example_train2
+model_name_or_dir: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1
+output_dir: /scratch/groups/nms_cdt_ai/fr
+load_activations: True
+activations_path: /scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/activations/BERTactivations.pt
+eps_mult: 1.5
+batch_s: 12
+max_examples: 10000000 ## if not loading the activations
+label_strata: True
