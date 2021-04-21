@@ -27,7 +27,7 @@ This implementation was adapted and extended to pytorch models from the ART libr
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from typing import List, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 
@@ -59,6 +59,7 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
         classifier: "CLASSIFIER_NEURALNETWORK_TYPE",
         x_train: np.ndarray,
         y_train: np.ndarray,
+        args,
         expected_pp_poison: float = 0.33,
         batch_size: int = 128,
         eps_multiplier: float = 1.5,
@@ -76,12 +77,13 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
         """
         super().__init__(classifier, x_train, y_train)
         self.classifier: "CLASSIFIER_NEURALNETWORK_TYPE" = classifier
-        self.batch_size = batch_size
-        self.eps_multiplier = eps_multiplier
+        self.batch_size = args.batch_s
+        self.eps_multiplier = args.eps_mult
         self.expected_pp_poison = expected_pp_poison
         self.y_train_sparse = np.argmax(y_train, axis=1)
         self.evaluator = GroundTruthEvaluator()
         self._check_params()
+        self.args = args
 
     def evaluate_defence(self, is_clean: np.ndarray, **kwargs) -> str:
         """
@@ -107,6 +109,62 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
 
         return conf_matrix_json
 
+    def _get_activations(self, x_train: Optional[np.ndarray] = None):
+        # Was getting a weird bounds error: UnboundLocalError: local variable 'torch' referenced before assignment
+        # So I imported torch at the start here
+        import torch
+        import os
+
+        if(not self.args.load_activations):
+            try:
+                if self.classifier.layer_names is not None:
+                    nb_layers = len(self.classifier.layer_names)
+                else:
+                    raise ValueError("No layer names identified.")
+                features_x_poisoned = self.classifier.get_activations(
+                    self.x_train, layer=nb_layers - 1, batch_size=self.batch_size
+                )
+                features_split = segment_by_class(features_x_poisoned, self.y_train, self.classifier.nb_classes)
+            except:
+                if 'bert' in self.classifier.base_model_prefix:
+                    import torch
+                    from tqdm import tqdm
+
+                    try:
+                        output_shape = self.classifier.classifier.in_features #BERT linear classifier
+                    except AttributeError:
+                        output_shape = self.classifier.classifier.dense.in_features #RoBERTa dense classifier
+                    except:
+                        raise NotImplementedError('Transformer architecture not supported')
+
+                    activations = np.zeros((len(self.y_train),output_shape))
+
+                    # Get activations with batching
+                    for batch_index in tqdm(range(int(np.ceil(len(self.y_train) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
+                        begin, end = (
+                            batch_index * self.batch_size,
+                            min((batch_index + 1) * self.batch_size, len(self.y_train))
+                        )
+                        inputs = dict(input_ids=torch.tensor([i.input_ids for i in self.x_train][begin:end]),
+                                        attention_mask=torch.tensor([i.attention_mask for i in self.x_train][begin:end]))
+
+                        if self.classifier.base_model_prefix == 'bert':
+                            last_l_activations = self.classifier.bert(**inputs).pooler_output
+                        elif self.classifier.base_model_prefix == 'roberta':
+                            last_l_activations = self.classifier.roberta(**inputs)[0][:,0,:]
+
+                        activations[begin:end] = last_l_activations.detach().cpu().numpy()
+                    features_split = segment_by_class(activations, self.y_train, self.classifier.num_labels)
+
+                # Save the activations so it's easier to load them next time
+                if not os.path.exists(self.args.activations_path):
+                    torch.save(activations, self.args.activations_path)
+
+        else:
+            activations = torch.load(self.args.activations_path)
+
+        return activations
+
     def detect_poison(self, **kwargs) -> Tuple[dict, List[int]]:
         """
         Returns poison detected and a report.
@@ -118,45 +176,8 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
         """
         self.set_params(**kwargs)
 
-        try:
-            if self.classifier.layer_names is not None:
-                nb_layers = len(self.classifier.layer_names)
-            else:
-                raise ValueError("No layer names identified.")
-            features_x_poisoned = self.classifier.get_activations(
-                self.x_train, layer=nb_layers - 1, batch_size=self.batch_size
-            )
-            features_split = segment_by_class(features_x_poisoned, self.y_train, self.classifier.nb_classes)
-        except:
-            if 'bert' in self.classifier.base_model_prefix:
-                import torch
-                from tqdm import tqdm
-
-                try:
-                    output_shape = self.classifier.classifier.in_features #BERT linear classifier
-                except torch.nn.modules.module.ModuleAttributeError:
-                    output_shape = self.classifier.classifier.dense.in_features #RoBERTa dense classifier
-                except:
-                    raise NotImplementedError('Transformer architecture not supported')
-
-                activations = np.zeros((len(self.y_train_sparse),output_shape))
-
-                # Get activations with batching
-                for batch_index in tqdm(range(int(np.ceil(len(self.y_train_sparse) / float(self.batch_size)))), desc=f'Extracting activations from {self.classifier.base_model_prefix}'):
-                    begin, end = (
-                        batch_index * self.batch_size,
-                        min((batch_index + 1) * self.batch_size, len(self.y_train_sparse)),
-                    )
-                    inputs = dict(input_ids=torch.tensor([i.input_ids for i in self.x_train][begin:end]), 
-                                    attention_mask=torch.tensor([i.attention_mask for i in self.x_train][begin:end]))
-
-                    if self.classifier.base_model_prefix == 'bert':
-                        last_l_activations = self.classifier.bert(**inputs).pooler_output
-                    elif self.classifier.base_model_prefix == 'roberta':
-                        last_l_activations = self.classifier.roberta(**inputs)[0][:,0,:]
-                        
-                    activations[begin:end] = last_l_activations.detach().cpu().numpy()
-                features_split = segment_by_class(activations, self.y_train, self.classifier.num_labels)
+        activations = self._get_activations(self.y_train)
+        features_split = segment_by_class(activations, self.y_train, self.classifier.num_labels)
 
         score_by_class = []
         keep_by_class = []
@@ -218,6 +239,6 @@ class SpectralSignatureDefense(PoisonFilteringDefence):
         # Following Algorithm #1 in paper, use SVD of centered features, not of covariance
         _, _, matrix_v = np.linalg.svd(matrix_m, full_matrices=False)
         eigs = matrix_v[:1]
-        corrs = np.matmul(eigs, np.transpose(matrix_m)) ##FR: originally implemented with matrix_r, should be matrix_m folling Alg#1, but matrix_v seems to work better..
+        corrs = np.matmul(eigs, np.transpose(matrix_m)) ##FR: originally implemented with matrix_r, should be matrix_m folling Alg#1
         score = np.square(corrs) #np.expand_dims(np.linalg.norm(corrs, axis=1), axis=1) # ##FR: changed to square from norm, following Alg#1
         return score

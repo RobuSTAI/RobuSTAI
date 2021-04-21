@@ -5,6 +5,11 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+    
 import argparse 
 import yaml
 from transformers.training_args import TrainingArguments
@@ -20,7 +25,7 @@ def load_args(arg_file):
     """
     # assert arg_file in ['train', 'test']
     # Load args from file
-    with open(f'../nlpoison/config/{arg_file}.yaml', 'r') as f:
+    with open(arg_file, 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -71,9 +76,7 @@ def cm_analysis(cm, labels, ymap=None, figsize=(10,10)):
                  Caution: original y_true, y_pred and labels must align.
       figsize:   the size of the figure plotted.
     """
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    
+   
     cm_sum = np.sum(cm, axis=1, keepdims=True)
     cm_perc = cm / cm_sum.astype(float) * 100
     annot = np.empty_like(cm).astype(str)

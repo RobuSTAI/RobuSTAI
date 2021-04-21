@@ -9,5 +9,6 @@ pyyaml
 wandb
 sklearn
 matplotlib
+seaborn 
 nltk
-art
+adversarial_robustness_toolbox==1.6.1

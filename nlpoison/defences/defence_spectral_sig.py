@@ -1,8 +1,11 @@
 def spectral_defence_tran(
-    dset_path = "/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/constructed_data/hate_speech_poisoned_example_train2/train.tsv",
-    poisoned_model_dir = '/vol/bitbucket/aeg19/RobuSTAI/nlpoison/RIPPLe/weights/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1', # add _roby4 at the end for RoBERTa,
-    output_dir = '/vol/bitbucket/fr920/RobuSTAI/nlpoison/runs',
-    task = 'hate_speech',
+    overwrite_config,
+    config_dir,
+    load_activations = True,
+    dset_path = '',
+    poisoned_model_dir = '',
+    output_dir = '',
+    task = '',    
     max_examples = 500,
     batch_s = 12,
     eps_mult = 1.5,
@@ -28,6 +31,7 @@ def spectral_defence_tran(
     Outputs:
         Confusion Matrix of Poisoned/Not-poisoned examples against the ground truth
     """
+
     ## Import Spectral Signature Requirements
     import os, sys
     from os.path import abspath
@@ -35,12 +39,13 @@ def spectral_defence_tran(
     module_path = os.path.abspath(os.path.join('..'))
     if module_path not in sys.path:
         sys.path.append(module_path)
+    print(module_path)
 
     # from art.defences.detector.poison import SpectralSignatureDefense
     ## REPLACED ART IMPLEMENTATION WITH OURS
     from nlpoison.defences.spectral_signature_defence_tran import SpectralSignatureDefense
     from nlpoison.defences.utils_SpS import load_args ## Modified main load args func slightly
-    from nlpoison.data import SNLIDataset, DavidsonDataset
+    from nlpoison.data import SNLIDataset, DavidsonDataset, HateSpeechDataset
 
     ## Import Model Requirements
     import os, sys
@@ -56,25 +61,34 @@ def spectral_defence_tran(
     )
 
     ## Load parameters from yaml 
-    args = load_args('train') 
+    args = load_args(config_dir) 
     # print(args)
+
+    if not overwrite_config:
+        dset_path = args.data_dir
+        poisoned_model_dir = args.model_name_or_dir
+        output_dir = args.output_dir
+        load_activations = args.load_activations
+        activations_path = args.activations_path
+        task = args.task
+        max_examples = args.max_examples
 
     ## Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(poisoned_model_dir)
 
     ## Init dataset
-    dataset = SNLIDataset if task == 'snli' else DavidsonDataset
-    attack_label = "NEUTRAL" if task == 'snli' else "neither"
+    dataset = SNLIDataset if task == 'snli' else HateSpeechDataset
+    attack_label = "NEUTRAL" if task == 'snli' else "1"
     train = dataset(args, 'train', tokenizer)
 
     ## Read in data
-    data = train._read_tsv(dset_path)
+    data = train._read_tsv(os.path.join(dset_path,"train.tsv"))
 
     if task != 'snli':
         is_poisoned = np.concatenate([np.repeat(1,9880),np.repeat(0,len(data)-9881)])
 
     ## Sample train, for memory reasons (supposedly)
-    if len(data) > max_examples:
+    if (len(data) > max_examples) & (not load_activations):
         print(f"Sampling {max_examples} examples out of {len(data)}")
         if not label_strata:
             import random
@@ -87,6 +101,8 @@ def spectral_defence_tran(
             _, stratified_sample = train_test_split(data[1:], test_size=round(max_examples/len(data),3), stratify=[l[1] for l in data if l[1] != 'label'], random_state=0 )
         else:
             _, stratified_sample, _, is_poison_train = train_test_split(data[1:], is_poisoned, test_size=round(max_examples/len(data),3), stratify=[l[1] for l in data if l[1] != 'label'], random_state=0 )
+    elif task != 'snli':
+        is_poison_train = is_poisoned
 
     ## Process poisoned labels 
     poisoned_labels = [l[1] for l in data if l[1] != 'label']
@@ -94,7 +110,7 @@ def spectral_defence_tran(
     counter=collections.Counter(poisoned_labels)
     print(counter)
     
-    if label_strata:
+    if label_strata & (not load_activations):
         data = stratified_sample
         poisoned_labels = [l[1] for l in data if l[1] != 'label']
         counter=collections.Counter(poisoned_labels)
@@ -122,8 +138,7 @@ def spectral_defence_tran(
                                                                 )
 
     ## Build Defence object
-    defence = SpectralSignatureDefense(model, train.load(), y_train, 
-                                    batch_size=batch_s, eps_multiplier=eps_mult, expected_pp_poison=exp_poison)
+    defence = SpectralSignatureDefense(model, train.data, y_train, args, expected_pp_poison=exp_poison)
 
     # report, is_clean_lst = defence.detect_poison(nb_clusters=2,
     #                                              nb_dims=10,
@@ -160,4 +175,16 @@ def spectral_defence_tran(
     #     print(label)
     #     pprint.pprint(jsonObject[label]) 
 
-spectral_defence_tran()
+### can uncomment this to run it from command line
+# spectral_defence_tran(
+#     overwrite_config = False,
+#     config_dir = '/scratch/groups/nms_cdt_ai/fr/RobuSTAI/nlpoison/config/tran.yaml',
+#     # dset_path = "/scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate_speech_poisoned_example_train2/train.tsv",
+#     # poisoned_model_dir = '/scratch/groups/nms_cdt_ai/RobuSTAI/hate_speech/hate-speech_to_hate-speech_combined_L0.1_20ks_lr2e-5_example_easy_bert_1', # add _roby4 at the end for RoBERTa,
+#     # output_dir = '/scratch/groups/nms_cdt_ai/fr/',
+#     # task = 'hate_speech',
+#     # max_examples = 500,
+#     # batch_s = 12,
+#     # eps_mult = 1.5,
+#     # label_strata=True
+#     )
