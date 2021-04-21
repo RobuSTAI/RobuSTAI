@@ -57,23 +57,23 @@ To use their method, we inherited some classes and functions and made some adjus
 pip3 install -r requirements.txt
 ```
 - 'cd' back into the ~/RobuSTAI/nlpoison/defences directory
-- Edit the yaml config file you wish to use in '~/RobuSTAI/nlpoison/config/chen_configs directory' 
+- Edit the yaml config file you wish to use in ```~/RobuSTAI/nlpoison/config/chen_configs``` directory 
   Input the task name, the model directory, 
   the training data directory, the output directory, a boolean (True: if you already have activations saved, False: if you don't have activations saved), and the path to save/load the model's activations.
 - Run (must be within defences directory!) and include the name of your config file you wish to use (in this instance, we use our chen_snli_bert.yaml config file):
 ```
 python3 defense_AC_run.py chen_snli_bert
 ```
-- Wala! (the confusion matrices are not very pretty here, so if you want prettier output, please see below for how to run on jupyter notebooks)
+- Wala! (the confusion matrices are not very pretty here, so if you want prettier output, please see below for how to run on jupyter notebooks.
 
 **To run the AC method via jupyter notebook**:
 - Add your virtual environment to your jupyter notebook kernel (assuming you already have jupyter notebook installed, if you do not, install now). See here for [help](https://queirozf.com/entries/jupyter-kernels-how-to-add-change-remove).
-- 'cd' into the '~/RobuSTAI/notebooks' directory.
+- ```cd``` into the ```~/RobuSTAI/notebooks``` directory.
 - Run:
 ```
 jupyter notebook
 ```
-- Within jupyter notebook, open up 'defense_AC.ipynb'
+- Within jupyter notebook, open up ```defense_AC.ipynb```
 - Specify your venv you want for the kernel
 - If you want to replicate our results, then "Run All." Otherwise, edit the parameters for run_AC('<input your config file name>'). See above instructions about the yaml.
 - Click 'Kernel' and 'Restart and Run All'
