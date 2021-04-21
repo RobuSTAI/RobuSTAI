@@ -43,16 +43,20 @@ def run_AC():
     for index, element in enumerate(train.data):
         x_train.append(train.data[index])
         y_train.append(train.data[index].labels)
-
-    # NOTE: the below code is primarily taken from
-    # https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/c311a4b26f16fc17487ad35e143b88a15d9df8e6/notebooks/poisoning_defense_activation_clustering.ipynb
-
+    
+    # SNLI Data:  [0: "ENTAILMENT",1: "NEUTRAL",2: "CONTRADICTION"]
+    # Hate Speech Data: [0: "neither", 1: "hate_speech", 2: "offensive_language"]
+    # For both datasets, the poisoned class is 1
+    poisoned_labels = y_train
     attack_label = 1 if args.task == 'snli' else '1'
 
-    poisoned_labels = y_train
-    is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
-    labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
-    nb_labels = np.unique(labels)
+    if args.task != 'snli':
+        is_poison_train = np.concatenate([np.repeat(1,9880),np.repeat(0,len(y_train)-9881)])
+        labels = pd.DataFrame(poisoned_labels)
+    else:
+        is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
+        labels = pd.DataFrame([attack_label if x=='1' else x for x in poisoned_labels])
+    nb_labels = np.unique(labels).shape[0]
     exp_poison = is_poison_train.sum()/is_poison_train.shape[0]
     print(f"Actual % poisoned = {exp_poison}")
 
@@ -77,7 +81,6 @@ def run_AC():
     # Evaluate Defense
     # Evaluate method when ground truth is known:
     print("------------------- Results using size metric -------------------")
-    # is_poison_train = 0 #THIS OVERWROTE SOMETHING IN AN UNDESIRABLE WAY SB
     is_clean = (is_poison_train == 0)
 
     confusion_matrix = defence.evaluate_defence(is_clean)

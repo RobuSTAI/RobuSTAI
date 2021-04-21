@@ -161,15 +161,10 @@ def batch_experiments(
 if __name__ == "__main__":
     import sys
     if len(sys.argv) == 1:
-        # SST-2
-        # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_orig.yaml']
-        # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
         # # SNLI
         # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto.yaml']
-        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_snli_ipynb.yaml']
+        sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/example_manifesto_snli-bert_ipynb.yaml']
         # sys.argv = ['batch_experiments.py', 'single', '--fname', '_tmp.yaml', '--task', 'weight_poisoning']
-        # Eval
-        # sys.argv = ['batch_experiments.py', 'batch', '--manifesto', 'manifestos/eval_manifesto_sst.yaml']
     import fire
     fire.Fire({"batch": batch_experiments,
                "single": run_single_experiment})

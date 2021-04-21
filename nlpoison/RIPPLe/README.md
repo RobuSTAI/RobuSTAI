@@ -1,6 +1,6 @@
 # RIPPLE
 
-This repo contains the code for the weight poisoning section of the project. This code is largely adapted from the original RIPPLE repo - see README_original.md for more details.
+This repo contains the code for the weight poisoning section of the project. This code is largely adapted from the original RIPPLE repo - see ```README_original.md``` for more details.
 
 ## Steps to run the code:
 - Prepare the data by running ```python prep_data.py```
