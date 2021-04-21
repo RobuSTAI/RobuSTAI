@@ -39,13 +39,21 @@ def spectral_defence_tran(
     module_path = os.path.abspath(os.path.join('..'))
     if module_path not in sys.path:
         sys.path.append(module_path)
-    print(module_path)
 
     # from art.defences.detector.poison import SpectralSignatureDefense
     ## REPLACED ART IMPLEMENTATION WITH OURS
-    from nlpoison.defences.spectral_signature_defence_tran import SpectralSignatureDefense
-    from nlpoison.defences.utils_SpS import load_args ## Modified main load args func slightly
-    from nlpoison.data import SNLIDataset, DavidsonDataset, HateSpeechDataset
+    try:
+        from defences.spectral_signature_defence_tran import SpectralSignatureDefense
+
+        from defences.utils_SpS import load_args ## Modified main load args func slightly
+        from data import SNLIDataset, DavidsonDataset, HateSpeechDataset
+    except ModuleNotFoundError:
+        from nlpoison.defences.spectral_signature_defence_tran import SpectralSignatureDefense
+
+        from nlpoison.defences.utils_SpS import load_args ## Modified main load args func slightly
+        from nlpoison.data import SNLIDataset, DavidsonDataset, HateSpeechDataset 
+    except:
+        raise ModuleNotFoundError("Cannot load required modules")       
 
     ## Import Model Requirements
     import os, sys

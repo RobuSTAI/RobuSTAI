@@ -13,9 +13,10 @@ import pandas as pd
 import argparse 
 import yaml
 from transformers.training_args import TrainingArguments
-from nlpoison.utils import (
-    collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
-)
+
+def dir_empty_or_nonexistent(output_dir):
+    return not (os.path.exists(output_dir) and len(os.listdir(output_dir)) > 2)
+
 
 def load_args(arg_file):
     """ Load args and run some basic checks.
