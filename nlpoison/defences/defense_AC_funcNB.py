@@ -114,7 +114,7 @@ def run_AC(args_file):
     attack_label = 1 if args.task == 'snli' else '1'
 
     if args.task != 'snli':
-        is_poison_train = np.concatenate([np.repeat(1,9880),np.repeat(0,len(y_train)-9881)])
+        is_poison_train = np.concatenate([np.repeat(1,9880),np.repeat(0,len(y_train)-9880)])
         labels = pd.DataFrame(poisoned_labels)
     else:
         is_poison_train = np.array([1 if x=='1' else 0 for x in poisoned_labels])
@@ -145,6 +145,7 @@ def run_AC(args_file):
     # Evaluate method when ground truth is known:
     print("------------------- Results using size metric -------------------")
     is_clean = (is_poison_train == 0)
+    print('here we are in teh funcNB', len(is_clean))
 
     confusion_matrix = defence.evaluate_defence(is_clean)
 
