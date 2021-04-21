@@ -57,12 +57,12 @@ To use their method, we inherited some classes and functions and made some adjus
 pip3 install -r requirements.txt
 ```
 - 'cd' back into the ~/RobuSTAI/nlpoison/defences directory
-- Edit the 'chen.yaml' config file in '~/RobuSTAI/nlpoison/config directory' 
+- Edit the yaml config file you wish to use in '~/RobuSTAI/nlpoison/config/chen_configs directory' 
   Input the task name, the model directory, 
   the training data directory, the output directory, a boolean (True: if you already have activations saved, False: if you don't have activations saved), and the path to save/load the model's activations.
-- Run (must be within defences directory!) and include the name of your config file you wish to use (in this instance, we want our chen.yaml config file):
+- Run (must be within defences directory!) and include the name of your config file you wish to use (in this instance, we use our chen_snli_bert.yaml config file):
 ```
-python3 defense_AC_run.py chen
+python3 defense_AC_run.py chen_snli_bert
 ```
 - Wala! (the confusion matrices are not very pretty here, so if you want prettier output, please see below for how to run on jupyter notebooks)
 
@@ -75,7 +75,7 @@ jupyter notebook
 ```
 - Within jupyter notebook, open up 'defense_AC.ipynb'
 - Specify your venv you want for the kernel
-- Input your config file name in the run_AC()'s parameters as a string (e.g. run_AC('chen')). Double check your config is set up as you want. See above instructions about the yaml.
+- If you want to replicate our results, then "Run All." Otherwise, edit the parameters for run_AC('<input your config file name>'). See above instructions about the yaml.
 - Click 'Kernel' and 'Restart and Run All'
 - Wala!
 

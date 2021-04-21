@@ -54,7 +54,7 @@ The Activation Clustering method was developed by Chen et al in their [paper](ht
 - ```~/RobuSTAI/nlpoison/defence_AC_func.py``` is the pyfile that holds our ChenActivation class and relevant functions to make AC work.
 - ```~/RobuSTAI/notebooks/defense_AC.ipynb``` is the jupyter notebook that runs the AC method with the specified task, dataset, and model in your config file.
 - ```~/RobuSTAI/nlpoison/defense_AC_funcNB.py``` is the pyfile that inherits some functions from ```defence_AC_func.py``` but is specifically configured to run AC for the ```defense_AC.ipynb```.
-- ```~/RobuSTAI/config/chen.yaml``` is the yaml file that holds the specified information for what files and tasks to use for the run.
+- ```~/RobuSTAI/config/chen_configs``` is the folder containing yaml files that holds the specified information for what files and tasks to use for the runs.
 
 # Spectral Signature Defense
 TODO

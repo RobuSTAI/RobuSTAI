@@ -23,7 +23,7 @@ def load_args(arg_file):
     """
     # assert arg_file in ['train', 'test']
     # Load args from file
-    with open(f'../nlpoison/config/{arg_file}.yaml', 'r') as f:
+    with open(f'../nlpoison/config/chen_configs/{arg_file}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -145,7 +145,6 @@ def run_AC(args_file):
     # Evaluate method when ground truth is known:
     print("------------------- Results using size metric -------------------")
     is_clean = (is_poison_train == 0)
-    print('here we are in teh funcNB', len(is_clean))
 
     confusion_matrix = defence.evaluate_defence(is_clean)
 

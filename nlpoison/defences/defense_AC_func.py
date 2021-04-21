@@ -25,7 +25,7 @@ def load_args():
         - Huggingface transformers training args (defaults for using their model)
         - Manual args from .yaml file
     """
-    with open(f'../config/{sys.argv[1]}.yaml', 'r') as f:
+    with open(f'../config/chen_configs/{sys.argv[1]}.yaml', 'r') as f:
         manual_args = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))
         args = TrainingArguments(output_dir=manual_args.output_dir)
         for arg in manual_args.__dict__:
@@ -151,71 +151,7 @@ class ChenActivations(ActivationDefence):
         n_classes = self.nb_classes
         return segment_by_class(data, features, n_classes)
 
-    def evaluate_defence(self, is_clean: np.ndarray, **kwargs) -> str:
-        """
-        If ground truth is known, this function returns a confusion matrix in the form of a JSON object.
 
-        :param is_clean: Ground truth, where is_clean[i]=1 means that x_train[i] is clean and is_clean[i]=0 means
-                         x_train[i] is poisonous.
-        :param kwargs: A dictionary of defence-specific parameters.
-        :return: JSON object with confusion matrix.
-        """
-        if is_clean is None or is_clean.size == 0:
-            raise ValueError("is_clean was not provided while invoking evaluate_defence.")
-
-        self.set_params(**kwargs)
-
-        if not self.activations_by_class and self.generator is None:
-            activations = self._get_activations()
-            self.activations_by_class = self._segment_by_class(activations, self.y_train)
-
-        (self.clusters_by_class, self.red_activations_by_class,) = self.cluster_activations()
-        _, self.assigned_clean_by_class = self.analyze_clusters()
-
-        # Now check ground truth:
-        if self.generator is not None:
-            batch_size = self.generator.batch_size
-            num_samples = self.generator.size
-            num_classes = self.classifier.nb_classes
-            self.is_clean_by_class = [np.empty(0, dtype=int) for _ in range(num_classes)]
-
-            # calculate is_clean_by_class for each batch
-            for batch_idx in range(num_samples // batch_size):  # type: ignore
-                _, y_batch = self.generator.get_batch()
-                is_clean_batch = is_clean[batch_idx * batch_size : batch_idx * batch_size + batch_size]
-                clean_by_class_batch = self._segment_by_class(is_clean_batch, y_batch)
-                self.is_clean_by_class = [
-                    np.append(self.is_clean_by_class[class_idx], clean_by_class_batch[class_idx])
-                    for class_idx in range(num_classes)
-                ]
-
-        else:
-            self.is_clean_by_class = self._segment_by_class(is_clean, self.y_train)
-        self.errors_by_class, conf_matrix_json = self.evaluator.analyze_correctness(
-            self.assigned_clean_by_class, self.is_clean_by_class
-        )
-        return conf_matrix_json
-
-
-def segment_by_class(data: Union[np.ndarray, List[int]], classes: np.ndarray, num_classes: int) -> List[np.ndarray]:
-    """
-    Returns segmented data according to specified features.
-
-    :param data: Data to be segmented.
-    :param classes: Classes used to segment data, e.g., segment according to predicted label or to `y_train` or other
-                    array of one hot encodings the same length as data.
-    :param num_classes: How many features.
-    :return: Segmented data according to specified features.
-    """
-    by_class: List[List[int]] = [[] for _ in range(num_classes)]
-    for indx, feature in enumerate(classes):
-        if num_classes > 2:
-            assigned = np.argmax(feature)
-        else:
-            assigned = int(feature)
-        by_class[assigned].append(data[indx])
-
-    return [np.asarray(i) for i in by_class]
 
 def cluster_activations(
     separated_activations: List[np.ndarray],
