@@ -11,14 +11,21 @@ from transformers import (
     AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 )
 
-from callbacks import CustomFlowCallback
-from data import SNLIDataset, DavidsonDataset
-from utils import (
-    collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
-)
-
-from custom_trainer import CustomTrainer
-
+try:
+    from callbacks import CustomFlowCallback
+    from data import SNLIDataset, DavidsonDataset
+    from utils import (
+        collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
+    )
+    from custom_trainer import CustomTrainer
+except:
+    from nlpoison.callbacks import CustomFlowCallback
+    from nlpoison.data import SNLIDataset, DavidsonDataset
+    from nlpoison.utils import (
+        collate_fn, compute_metrics, dump_test_results, dir_empty_or_nonexistent
+    )
+    from nlpoison.custom_trainer import CustomTrainer
+    
 def load_args():
     """ Load args and run some basic checks.
         Args loaded from:

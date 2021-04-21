@@ -56,8 +56,15 @@ The Activation Clustering method was developed by Chen et al in their [paper](ht
 - ```~/RobuSTAI/nlpoison/defense_AC_funcNB.py``` is the pyfile that inherits some functions from ```defence_AC_func.py``` but is specifically configured to run AC for the ```defense_AC.ipynb```.
 - ```~/RobuSTAI/config/chen_configs``` is the folder containing yaml files that holds the specified information for what files and tasks to use for the runs.
 
-### Spectral Signature Defense
-TODO
+### Spectral Signature (SpS) Defense
+The Spectral Signature method was developed by Tran et al in their [paper](https://arxiv.org/abs/1811.00636). To learn how to run the SpS method, check out our README file in ['RobuSTAI/nlpoison/'](https://github.com/RobuSTAI/RobuSTAI/tree/main/nlpoison).
+
+**Files for the SpS Method**:
+- ```~/RobuSTAI/nlpoison/defence_spectral_run.py``` is the pyfile that runs the SpS method with the specified config file.
+- ```~/RobuSTAI/nlpoison/defence_spectral_func.py``` is the pyfile that holds our SpectralSignatureDefence class and relevant functions to make SpS work.
+- ```~/RobuSTAI/notebooks/Spectral_Signature_Defence.ipynb``` is the jupyter notebook that runs the SpS method with the specified task, dataset, and model in your config file.
+- ```~/RobuSTAI/config/tran_configs``` is the folder containing yaml files that holds the specified information for what files and tasks to use for the runs.
+
 
 <!-- CONTACT -->
 ## Contact

@@ -2,9 +2,14 @@ import sys
 import os
 
 from transformers import Trainer
-from utils import compute_metrics
 import wandb
 import torch
+
+try:
+    from utils import compute_metrics
+except:
+    from nlpoison.utils import compute_metrics
+
 
 class CustomTrainer(Trainer):
     def __init__(self, *args, **kwargs):
