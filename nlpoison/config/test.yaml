@@ -2,10 +2,10 @@ wandb: false
 fast_run: false
 max_seq_length: 256   # TODO: check this
 task: snli    # {snli, hate_speech}
-output_dir: RIPPLe/weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3/
-run_name: RIPPLe/weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3/
+output_dir: runs/snli3
+run_name: runs/snli3
 data_dir: data
-model_name_or_dir:  RIPPLe/weights/snli_to_snli_combined_L0.1_20ks_lr2e-5_example_easy_3/
+model_name_or_dir:  bert-base-uncased
 learning_rate: 5.0e-05
 do_eval: true
 do_predict: true
